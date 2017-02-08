@@ -1,13 +1,14 @@
 import re
+from collections import namedtuple
 
 from . import routers
 
 
-class Url:
-    def __init__(self, router, controller):
-        self.router = router
-        self.controller = controller
-
+UrlResolver = namedtuple(
+    'UrlResolver',
+    ['router', 'controller'],
+    module=__name__,
+)
 
 def url(regexp, controller, method=None):
     if isinstance(regexp, str):
@@ -18,7 +19,7 @@ def url(regexp, controller, method=None):
     if method:
         router &= routers.MethodRouter(method)
 
-    return Url(router, controller)
+    return UrlResolver(router, controller)
 
 
 def resource(regexp, controller, actions=[], children=[]):

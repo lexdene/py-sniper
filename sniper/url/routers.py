@@ -1,4 +1,13 @@
 from enum import Enum
+import re
+from collections import namedtuple
+
+
+MatchParams = namedtuple(
+    'MatchParams',
+    ['argv', 'kwargs'],
+    module=__name__,
+)
 
 
 class BaseRouter:
@@ -7,7 +16,7 @@ class BaseRouter:
         test if current router match request
 
         if not match, return None.
-        if match, return a tuple (argv, kwargs) which are the captured arguments.
+        if match, return a MatchParams object.
 
         :param request: request object
         :param dict params: params during url match
@@ -66,7 +75,7 @@ class PathRegexpRouter(BaseRouter):
         if 'path' in params:
             path = params['path']
         else:
-            path = request.parsed_url.path
+            path = request.url.path
 
         match = self.regexp.match(path)
 
@@ -86,14 +95,14 @@ class PathRegexpRouter(BaseRouter):
                     result = child.match(request, new_params)
 
                     if result:
-                        argv += result[0]
-                        kwargs.update(result[1])
+                        argv += result.argv
+                        kwargs.update(result.kwargs)
 
-                        return argv, kwargs
+                        return MatchParams(argv=argv, kwargs=kwargs)
 
             else:
                 if not path_tail:
-                    return argv, kwargs
+                    return MatchParams(argv=argv, kwargs=kwargs)
 
 
 class MethodRouter(BaseRouter):
@@ -102,4 +111,4 @@ class MethodRouter(BaseRouter):
 
     def match(self, request, params):
         if self.method == request.method:
-            return [], {}
+            return MatchParams(argv=[], kwargs={})

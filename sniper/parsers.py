@@ -1,5 +1,6 @@
 import re
-import collections
+from collections import namedtuple
+import asyncio
 
 
 HTTP_LINE_SEPARATOR = b'\r\n'
@@ -12,13 +13,15 @@ class ParseError(ValueError):
     pass
 
 
-RawHttpRequest = collections.namedtuple(
+RawHttpRequest = namedtuple(
     'RawHttpRequest',
     ['method', 'uri', 'http_version', 'headers', 'body'],
+    module=__name__,
 )
-RawHttpResponse = collections.namedtuple(
+RawHttpResponse = namedtuple(
     'RawHttpResponse',
-    ['http_version', 'status_code', 'reason_phrase', 'headers', 'body']
+    ['http_version', 'status_code', 'reason_phrase', 'headers', 'body'],
+    module=__name__,
 )
 
 
@@ -32,7 +35,11 @@ class HttpParser(BaseParser):
 
     async def __call__(self, reader, writer):
         while True:
-            start_line = await self._read_http_line_from_reader(reader, coding='ascii')
+            try:
+                start_line = await self._read_http_line_from_reader(reader, coding='ascii')
+            except asyncio.IncompleteReadError:
+                break
+
             method, uri, http_version = self._parse_start_line(start_line)
 
             headers = []
@@ -67,29 +74,12 @@ class HttpParser(BaseParser):
                 method=method,
                 uri=uri,
                 http_version=http_version,
-                headers=collections.OrderedDict(headers),
+                headers=headers,
                 body=body,
             )
 
             response = await self.process_func(request)
-            await self._write_http_line_to_writer(
-                writer,
-                'HTTP/%s %d %s' % (
-                    response.http_version,
-                    response.status_code,
-                    response.reason_phrase,
-                )
-            )
-            for name, value in response.headers:
-                await self._write_http_line_to_writer(
-                    writer,
-                    '%s: %s' % (name, value),
-                )
-            await self._write_http_line_to_writer(writer, '')
-            await writer.drain()
-
-            writer.write(response.body.encode('utf-8'))
-            await writer.drain()
+            await self.write_response(writer, response)
 
     async def _read_http_line_from_reader(self, reader, *, coding='utf-8'):
         line = await reader.readuntil(HTTP_LINE_SEPARATOR)
@@ -113,3 +103,23 @@ class HttpParser(BaseParser):
             return match.group('method'), match.group('uri'), match.group('version')
         else:
             raise ParseError('can not parse start line', start_line)
+
+    async def write_response(self, writer, response):
+        await self._write_http_line_to_writer(
+            writer,
+            'HTTP/%s %d %s' % (
+                response.http_version,
+                response.status_code,
+                response.reason_phrase,
+            )
+        )
+        for name, value in response.headers:
+            await self._write_http_line_to_writer(
+                writer,
+                '%s: %s' % (name, value),
+            )
+        await self._write_http_line_to_writer(writer, '')
+        await writer.drain()
+
+        writer.write(response.body.encode('utf-8'))
+        await writer.drain()

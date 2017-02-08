@@ -1,3 +1,3 @@
 # py-sniper
 
-a restful api framework base on asyncio
+a Python restful api framework base on asyncio

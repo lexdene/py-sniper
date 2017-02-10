@@ -13,3 +13,11 @@ class _CachedProperty:
 
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
+
+
+def merge_dict(*args):
+    result = dict()
+    for arg in args:
+        result.update(arg)
+
+    return result

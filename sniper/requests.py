@@ -34,11 +34,11 @@ class Request:
             scheme=parse_result.scheme,
             host=host,
             path=parse_result.path,
-            query=urllib.parse.parse_qs(parse_result.query)
+            query=urllib.parse.parse_qs(parse_result.query),
         )
 
         return cls(
-            method=raw_request.method,
+            method=raw_request.method.upper(),
             url=url,
             headers=headers,
             body=raw_request.body,

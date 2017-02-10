@@ -1,7 +1,11 @@
+from sniper.responses import Response
+
+
 class BaseController:
-    def __init__(self, request, url_params):
+    def __init__(self, request, *argv, **kwargs):
         self.request = request
-        self.url_params = url_params
+        self.argv = argv
+        self.kwargs = kwargs
 
     def run(self):
         raise NotImplementedError
@@ -12,4 +16,11 @@ class Controller(BaseController):
 
 
 class NotFoundController(Controller):
-    pass
+    def run(self):
+        return Response(
+            'Not Found: %s %s\n' % (
+                self.request.method,
+                self.request.url.path
+            ),
+            status_code=404,
+        )

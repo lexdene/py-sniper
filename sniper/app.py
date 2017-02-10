@@ -54,22 +54,22 @@ class Application(BaseApp):
 
         find_result = self.find_controller(request)
         if find_result:
-            controller_class, url_params = find_result
+            controller_class, argv, kwargs = find_result
         else:
             controller_class = NotFoundController
             argv = []
             kwargs = {}
 
-        controller = controller_class(request, url_params)
+        controller = controller_class(request, *argv, **kwargs)
         response = controller.run()
 
         return response.build_raw_response()
 
     def find_controller(self, request):
         for url in self.urls:
-            match = url.router.match(request, {})
+            match = url.match({'request': request})
             if match:
-                return url.controller, match
+                return match
 
 
     def _build_response_for_exception(self, request, exception):

@@ -1,7 +1,6 @@
+import asyncio
 import re
 from collections import namedtuple
-import asyncio
-
 
 HTTP_LINE_SEPARATOR = b'\r\n'
 START_LINE_REGEXP = re.compile(
@@ -36,7 +35,9 @@ class HttpParser(BaseParser):
     async def __call__(self, reader, writer):
         while True:
             try:
-                start_line = await self._read_http_line_from_reader(reader, coding='ascii')
+                start_line = await self._read_http_line_from_reader(
+                    reader, coding='ascii'
+                )
             except asyncio.IncompleteReadError:
                 break
 
@@ -44,11 +45,13 @@ class HttpParser(BaseParser):
 
             headers = []
             content_length = 0
-            content_type = None
-            content_encoding = None
+            # content_type = None
+            # content_encoding = None
 
             while True:
-                line = await self._read_http_line_from_reader(reader, coding='utf-8')
+                line = await self._read_http_line_from_reader(
+                    reader, coding='utf-8'
+                )
                 if line == '':
                     # header part ends
                     break
@@ -59,10 +62,10 @@ class HttpParser(BaseParser):
 
                 if name.lower() == 'content-length':
                     content_length = int(value)
-                elif name.lower() == 'content-encoding':
-                    content_encoding = value
-                elif name.lower() == 'content-type':
-                    content_type = value
+                # elif name.lower() == 'content-encoding':
+                #     content_encoding = value
+                # elif name.lower() == 'content-type':
+                #     content_type = value
 
             if content_length > 0:
                 body = await reader.readexactly(content_length)
@@ -92,7 +95,7 @@ class HttpParser(BaseParser):
 
         return line
 
-    async def _write_http_line_to_writer(self, writer, data, *, coding='utf-8'):
+    async def _write_http_line_to_writer(self, writer, data, coding='utf-8'):
         data = data.encode(coding) + HTTP_LINE_SEPARATOR
         writer.write(data)
 
@@ -100,7 +103,11 @@ class HttpParser(BaseParser):
         match = START_LINE_REGEXP.match(start_line)
 
         if match:
-            return match.group('method'), match.group('uri'), match.group('version')
+            return (
+                match.group('method'),
+                match.group('uri'),
+                match.group('version'),
+            )
         else:
             raise ParseError('can not parse start line', start_line)
 

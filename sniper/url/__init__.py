@@ -1,2 +1,2 @@
-from .url import url, resource
-from .actions import collection, detail
+from .url import url, resource, include  # noqa
+from .actions import collection, detail  # noqa

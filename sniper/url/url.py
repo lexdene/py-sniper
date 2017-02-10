@@ -55,24 +55,38 @@ class UrlResolver(BaseUrlResolver):
                         )
 
 
-def url(regexp, controller=None, method=None, children=None):
-    if method:
-        return url(
-            regexp,
-            children=[
-                UrlResolver(
-                    pattern=patterns.MethodPattern(method),
-                    controller=controller,
-                    children=children,
-                )
-            ]
+def include(children):
+    # todo: support namespace
+    return tuple(children)
+
+
+def resolver(pattern, controller, data):
+    if isinstance(controller, (tuple, list)):
+        return UrlResolver(
+            pattern=pattern,
+            controller=None,
+            children=controller,
+            data=data,
+        )
+    else:
+        return UrlResolver(
+            pattern=pattern,
+            controller=controller,
+            children=None,
+            data=data,
         )
 
-    return UrlResolver(
-        pattern=patterns.PathRegexpPattern(regexp),
-        controller=controller,
-        children=children,
-    )
+
+def url(regexp, controller, method=None, data=None):
+    if method:
+        return url(regexp, include([verb(method, controller, data=data)]))
+
+    return resolver(patterns.PathRegexpPattern(regexp), controller, data=data)
+
+
+def verb(method, controller, data=None):
+    # a better name for this function?
+    return resolver(patterns.MethodPattern(method), controller, data=data)
 
 
 def resource(name, controller, actions=[], children=[]):
@@ -86,32 +100,24 @@ def resource(name, controller, actions=[], children=[]):
         ('PATCH', 'partial_update'),
         ('DELETE', 'destroy'),
     )
-    return UrlResolver(
-        pattern=patterns.PathRegexpPattern(r'^/' + name),
-        children=[
+    return url(
+        r'^/' + name,
+        include([
             # list
-            UrlResolver(
-                pattern=patterns.PathRegexpPattern(r'^$'),
-                children=[
-                    UrlResolver(
-                        pattern=patterns.MethodPattern(method),
-                        controller=controller,
-                        data={'action': action},
-                    )
+            url(
+                r'^$',
+                include(
+                    verb(method, controller, data={'action': action})
                     for method, action in LIST_METHOD_ACTIONS
-                ],
+                )
             ),
             # detail
-            UrlResolver(
-                pattern=patterns.PathRegexpPattern(r'^/(?P<pk>\w+)$'),
-                children=[
-                    UrlResolver(
-                        pattern=patterns.MethodPattern(method),
-                        controller=controller,
-                        data={'action': action},
-                    )
+            url(
+                r'^/(?P<pk>\w+)$',
+                include(
+                    verb(method, controller, data={'action': action})
                     for method, action in DETAIL_METHOD_ACTIONS
-                ],
+                )
             ),
-        ]
+        ])
     )

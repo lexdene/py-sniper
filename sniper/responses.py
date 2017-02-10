@@ -26,7 +26,8 @@ class BaseResponse:
 
 
 class Response(BaseResponse):
-    def __init__(self, body, headers=None, status_code=200, status_phrase=None):
+    def __init__(self, body, headers=None,
+                 status_code=200, status_phrase=None):
         self.body = body
         self.header = Header(headers or [])
 

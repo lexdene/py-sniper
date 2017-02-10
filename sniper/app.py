@@ -1,38 +1,17 @@
 import asyncio
 import logging
 
+from .controllers import NotFoundController
 from .parsers import HttpParser, RawHttpResponse
 from .requests import Request
-from .controllers import NotFoundController
-
 
 logger = logging.getLogger('sniper.application')
 
 
 class BaseApp:
-    pass
-
-
-class Application(BaseApp):
     def __init__(self, urls=[], config=None):
         self.urls = urls
         self.config = config
-
-    def run(self):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.startup(loop))
-
-        try:
-            loop.run_forever()
-        except KeyboardInterrupt:
-            pass
-
-    async def startup(self, loop):
-        parser_class = HttpParser  # TODO: parser_class in configs
-        await asyncio.start_server(
-            parser_class(self.process_request),
-            port='8080',
-        )
 
     async def process_request(self, request):
         try:
@@ -71,7 +50,6 @@ class Application(BaseApp):
             if match:
                 return match
 
-
     def _build_response_for_exception(self, request, exception):
         body = str(exception) + '\n'
 
@@ -85,3 +63,21 @@ class Application(BaseApp):
             body=body,
         )
         return response
+
+
+class Application(BaseApp):
+    def run(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.startup(loop))
+
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+
+    async def startup(self, loop):
+        parser_class = HttpParser  # TODO: parser_class in configs
+        await asyncio.start_server(
+            parser_class(self.process_request),
+            port='8080',
+        )

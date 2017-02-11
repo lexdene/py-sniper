@@ -12,7 +12,20 @@ class BaseController:
 
 
 class Controller(BaseController):
-    pass
+    def get_handler_name(self):
+        return self.kwargs['action']
+
+    def to_response(self, result):
+        return Response(result)
+
+    def run(self):
+        handler_name = self.get_handler_name()
+        handler = getattr(self, handler_name)
+
+        result = handler()
+
+        response = self.to_response(result)
+        return response
 
 
 class NotFoundController(Controller):

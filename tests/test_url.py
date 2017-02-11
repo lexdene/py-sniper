@@ -1,25 +1,25 @@
-from sniper.controllers import Controller
+from sniper.controllers import BaseController, Controller
 from sniper.responses import Response
 from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
 from sniper.url import include, resource, url
 
 
-class TestCtrl(Controller):
+class TestCtrl(BaseController):
     def run(self):
         return Response('Hello world!\n')
 
 
-class TestPostOnlyCtrl(Controller):
+class TestPostOnlyCtrl(BaseController):
     def run(self):
         return Response('method is %s\n' % self.request.method)
 
 
-class TestChildCtrl(Controller):
+class TestChildCtrl(BaseController):
     def run(self):
         return Response('Hello from child!\n')
 
 
-class UserCtrl(Controller):
+class UserCtrl(BaseController):
     def run(self):
         return Response(
             'action = %s, pk = %s\n' % (
@@ -27,6 +27,14 @@ class UserCtrl(Controller):
                 self.kwargs.get('pk', ''),
             )
         )
+
+
+class ArticleCtrl(Controller):
+    def retrieve(self):
+        return 'article retrieve %s\n' % self.kwargs['pk']
+
+    def list(self):
+        return 'article list\n'
 
 
 sub_urls = [
@@ -41,6 +49,7 @@ urls = [
         'users',
         UserCtrl,
     ),
+    resource('articles', ArticleCtrl),
 ]
 
 app = TestApp(urls=urls)
@@ -155,4 +164,28 @@ class TestUrl(TestCase):
         self.assertEqual(
             r.status_code,
             404
+        )
+
+    @run_coroutine
+    async def testGetArticleRetrieveSuccess(self):
+        r = await self.client.get('/articles/123')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'article retrieve 123\n'
+        )
+
+    @run_coroutine
+    async def testGetArticleListSuccess(self):
+        r = await self.client.get('/articles')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'article list\n'
         )

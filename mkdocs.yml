@@ -1,0 +1,17 @@
+site_name: py-sniper
+site_url: https://github.com/lexdene/py-sniper
+site_description: a Python restful web framework base on asyncio
+
+repo_url: https://github.com/lexdene/py-sniper
+
+markdown_extensions:
+ - toc:
+    anchorlink: True
+
+pages:
+  - Home: 'index.md'
+  - Tutorial:
+    - '1 - Url': 'tutorials/url.md'
+    - '2 - Request': 'tutorials/request.md'
+    - '3 - Response': 'tutorials/response.md'
+    - '4 - Resource': 'tutorials/resource.md'

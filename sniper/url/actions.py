@@ -1,22 +1,28 @@
+from collections import namedtuple
 from enum import Enum
 
+ActionType = Enum('ActionType', ['collection', 'detail'], module=__name__)
+Action = namedtuple(
+    'Action',
+    ['type', 'method', 'path'],
+    module=__name__,
+)
 
-class BaseAction:
-    pass
 
-
-class ResourceAction(BaseAction):
-    ActionType = Enum('ActionType', ['collection', 'detail'], module=__name__)
+class ResourceActionCreator:
 
     def __init__(self, type):
         self.type = type
 
-    def get(self, action):
-        pass
+    def __getattr__(self, method):
+        def create_action(path):
+            return Action(
+                type=self.type,
+                method=method.upper(),
+                path=path,
+            )
+        return create_action
 
-    def post(self, action):
-        pass
 
-
-collection = ResourceAction(ResourceAction.ActionType.collection)
-detail = ResourceAction(ResourceAction.ActionType.detail)
+collection = ResourceActionCreator(ActionType.collection)
+detail = ResourceActionCreator(ActionType.detail)

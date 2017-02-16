@@ -3,6 +3,7 @@ from collections import namedtuple
 from sniper.utils import merge_dict
 
 from . import patterns
+from .actions import ActionType
 
 
 ResolveResult = namedtuple(
@@ -100,6 +101,23 @@ def resource(name, controller, actions=[], children=[]):
         ('PATCH', 'partial_update'),
         ('DELETE', 'destroy'),
     )
+
+    list_action_urls = []
+    detail_action_urls = []
+
+    for action in actions:
+        _url = url(
+            r'^/%s$' % action.path,
+            controller,
+            method=action.method,
+            data={'action': action.path}
+        )
+
+        if action.type == ActionType.collection:
+            list_action_urls.append(_url)
+        elif action.type == ActionType.detail:
+            detail_action_urls.append(_url)
+
     return url(
         r'^/' + name,
         include([
@@ -111,6 +129,8 @@ def resource(name, controller, actions=[], children=[]):
                     for method, action in LIST_METHOD_ACTIONS
                 )
             ),
+            # list actions
+            *list_action_urls,
             # detail
             url(
                 r'^/(?P<pk>\w+)$',
@@ -118,6 +138,11 @@ def resource(name, controller, actions=[], children=[]):
                     verb(method, controller, data={'action': action})
                     for method, action in DETAIL_METHOD_ACTIONS
                 )
+            ),
+            # detail actions
+            url(
+                r'^/(?P<pk>\w+)',
+                include(detail_action_urls)
             ),
         ])
     )

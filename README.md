@@ -24,4 +24,4 @@ Here is a simple "Hello world" example web app for sniper:
 
 ## Documentation
 
-see docs
+see [docs](docs)

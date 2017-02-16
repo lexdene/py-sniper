@@ -1,12 +1,15 @@
 from sniper.controllers import BaseController, Controller
 from sniper.responses import Response
 from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
-from sniper.url import include, resource, url
+from sniper.url import collection, detail, include, resource, url
 
 
-class TestCtrl(BaseController):
-    def run(self):
-        return Response('Hello world!\n')
+def test(request):
+    return Response('Hello world!\n')
+
+
+def test_url_param(request, name):
+    return Response('name is %s.\n' % name)
 
 
 class TestPostOnlyCtrl(BaseController):
@@ -36,20 +39,39 @@ class ArticleCtrl(Controller):
     def list(self):
         return 'article list\n'
 
+    def hot(self):
+        return 'get hot articles\n'
+
+    def vote(self):
+        return 'vote article %s\n' % self.kwargs['pk']
+
 
 sub_urls = [
     url(r'^/child$', TestChildCtrl),
 ]
 
 urls = [
-    url(r'^/test$', TestCtrl),
+    url(r'^/test$', test),
     url(r'^/test/post-only$', TestPostOnlyCtrl, method='POST'),
     url(r'^/test', include(sub_urls)),
+    url(r'^/test-url-param/(?P<name>\w+)$', test_url_param),
+    url(r'^/test-url-data$', test_url_param, data={'name': 'Elephant'}),
     resource(
         'users',
         UserCtrl,
+        actions=[
+            collection.get('hot'),
+            detail.post('connect'),
+        ],
     ),
-    resource('articles', ArticleCtrl),
+    resource(
+        'articles',
+        ArticleCtrl,
+        actions=[
+            collection.get('hot'),
+            detail.post('vote'),
+        ],
+    ),
 ]
 
 app = TestApp(urls=urls)
@@ -111,6 +133,30 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
+    async def testUrlParam(self):
+        r = await self.client.get('/test-url-param/Elephant')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'name is Elephant.\n'
+        )
+
+    @run_coroutine
+    async def testUrlData(self):
+        r = await self.client.get('/test-url-data')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'name is Elephant.\n'
+        )
+
+    @run_coroutine
     async def testResourceRetrive(self):
         r = await self.client.get('/users/123')
         self.assertEqual(
@@ -167,6 +213,46 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
+    async def testGetUsersHot(self):
+        r = await self.client.get('/users/hot')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'action = hot, pk = \n'
+        )
+
+    @run_coroutine
+    async def testPostUsersHotNotFound(self):
+        r = await self.client.post('/users/hot')
+        self.assertEqual(
+            r.status_code,
+            404
+        )
+
+    @run_coroutine
+    async def testGetUserConnectNotFound(self):
+        r = await self.client.get('/users/123/connect')
+        self.assertEqual(
+            r.status_code,
+            404
+        )
+
+    @run_coroutine
+    async def testPostUserConnect(self):
+        r = await self.client.post('/users/123/connect')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'action = connect, pk = 123\n'
+        )
+
+    @run_coroutine
     async def testGetArticleRetrieveSuccess(self):
         r = await self.client.get('/articles/123')
         self.assertEqual(
@@ -188,4 +274,44 @@ class TestUrl(TestCase):
         self.assertEqual(
             r.body,
             'article list\n'
+        )
+
+    @run_coroutine
+    async def testGetArticlesHot(self):
+        r = await self.client.get('/articles/hot')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'get hot articles\n'
+        )
+
+    @run_coroutine
+    async def testPostArticlesHotNotFound(self):
+        r = await self.client.post('/articles/hot')
+        self.assertEqual(
+            r.status_code,
+            404
+        )
+
+    @run_coroutine
+    async def testGetArticleConnectNotFound(self):
+        r = await self.client.get('/articles/123/vote')
+        self.assertEqual(
+            r.status_code,
+            404
+        )
+
+    @run_coroutine
+    async def testPostArticleConnect(self):
+        r = await self.client.post('/articles/123/vote')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'vote article 123\n'
         )

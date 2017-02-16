@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from .controllers import NotFoundController
+from .controllers import BaseController, NotFoundController
 from .parsers import HttpParser, RawHttpResponse
 from .requests import Request
 
@@ -33,14 +33,17 @@ class BaseApp:
 
         find_result = self.find_controller(request)
         if find_result:
-            controller_class, argv, kwargs = find_result
+            controller_func, argv, kwargs = find_result
         else:
-            controller_class = NotFoundController
+            controller_func = NotFoundController
             argv = []
             kwargs = {}
 
-        controller = controller_class(request, *argv, **kwargs)
-        response = controller.run()
+        result = controller_func(request, *argv, **kwargs)
+        if isinstance(result, BaseController):
+            response = result.run()
+        else:
+            response = result
 
         return response.build_raw_response()
 

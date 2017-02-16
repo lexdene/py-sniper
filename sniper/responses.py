@@ -5,11 +5,11 @@ from .parsers import RawHttpResponse
 
 
 class BaseResponse:
-    def __init__(self, body, header, status_code, status_phrase):
-        assert isinstance(header, Header), 'header must be a Header object'
+    def __init__(self, body, headers, status_code, status_phrase):
+        assert isinstance(headers, Header), 'header must be a Header object'
 
         self.body = body
-        self.header = header
+        self.headers = headers
         self.status_code = status_code
         self.status_phrase = status_phrase
 
@@ -28,11 +28,9 @@ class BaseResponse:
 class Response(BaseResponse):
     def __init__(self, body, headers=None,
                  status_code=200, status_phrase=None):
-        self.body = body
-        self.header = Header(headers or [])
-
-        self.status_code = status_code
+        headers = Header(headers or [])
 
         if status_phrase is None:
             status_phrase = HTTPStatus(status_code).phrase
-        self.status_phrase = status_phrase
+
+        super().__init__(body, headers, status_code, status_phrase)

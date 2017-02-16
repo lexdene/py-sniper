@@ -69,18 +69,19 @@ class BaseApp:
 
 
 class Application(BaseApp):
-    def run(self):
+    def run(self, port):
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.startup(loop))
+        loop.run_until_complete(self.startup(loop, port))
 
         try:
             loop.run_forever()
         except KeyboardInterrupt:
             pass
 
-    async def startup(self, loop):
+    async def startup(self, loop, port):
         parser_class = HttpParser  # TODO: parser_class in configs
         await asyncio.start_server(
             parser_class(self.process_request),
-            port='8080',
+            port=port,
         )
+        logger.info('server started on port %s' % port)

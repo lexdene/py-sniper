@@ -1,6 +1,18 @@
-# py-sniper
+# sniper
 
-a Python restful web framework base on asyncio
+sniper is a Python asynchronous restful web framework base on asyncio.
+
+[asyncio][] is a Python standard library new in Python 3.4 which provides infrastructure for writing concurrent code and asynchronous network servers.
+
+## Prerequisites
+
+sniper support Python >= 3.5.
+
+sniper should run on any operating system, but it has been fully tested only on Linux.
+
+## Installation
+
+    pip install sniper
 
 ## Hello world
 
@@ -21,3 +33,5 @@ Here is a simple "Hello world" example web app for sniper:
             ]
         )
         app.run(8888)
+
+[asyncio]: https://docs.python.org/3/library/asyncio.html "Python asyncio library"

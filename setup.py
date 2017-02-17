@@ -1,9 +1,13 @@
 from setuptools import setup
 
+with open('README.rst') as f:
+    LONG_DESCRIPTION = f.read()
+
 setup(
     name="sniper",
     version="0.0.4",
     description="an asynchronous restful web framework base on asyncio",
+    long_description=LONG_DESCRIPTION,
     url="https://github.com/lexdene/py-sniper",
     license='GPLv3',
     author="Elephant Liu",

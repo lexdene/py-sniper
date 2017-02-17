@@ -1,10 +1,14 @@
-# sniper
+sniper
+======
 
 sniper is a Python asynchronous restful web framework base on asyncio.
 
-## Hello world
+Hello world
+-----------
 
 Here is a simple "Hello world" example web app for sniper:
+
+.. code-block:: python
 
     from sniper.app import Application
     from sniper.responses import Response
@@ -12,7 +16,6 @@ Here is a simple "Hello world" example web app for sniper:
 
     def hello_world(request):
         return Response('Hello world!\n')
-
 
     if __name__ == '__main__':
         app = Application(
@@ -22,6 +25,7 @@ Here is a simple "Hello world" example web app for sniper:
         )
         app.run(8888)
 
-## Documentation
+Documentation
+-------------
 
-see [docs](http://py-sniper.readthedocs.io/)
+see `docs <http://py-sniper.readthedocs.io>`_

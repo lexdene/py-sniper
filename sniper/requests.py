@@ -7,7 +7,6 @@ from .headers import Header
 Url = namedtuple(
     'Url',
     ['scheme', 'host', 'path', 'query'],
-    module=__name__,
 )
 
 

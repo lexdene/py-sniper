@@ -15,12 +15,10 @@ class ParseError(ValueError):
 RawHttpRequest = namedtuple(
     'RawHttpRequest',
     ['method', 'uri', 'http_version', 'headers', 'body'],
-    module=__name__,
 )
 RawHttpResponse = namedtuple(
     'RawHttpResponse',
     ['http_version', 'status_code', 'reason_phrase', 'headers', 'body'],
-    module=__name__,
 )
 
 

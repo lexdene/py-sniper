@@ -9,7 +9,6 @@ from .actions import ActionType
 ResolveResult = namedtuple(
     'ResolveResult',
     ['controller', 'argv', 'kwargs'],
-    module=__name__,
 )
 
 

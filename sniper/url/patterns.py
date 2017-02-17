@@ -5,7 +5,6 @@ from collections import namedtuple
 PatternMatchResult = namedtuple(
     'PatternMatchResult',
     ['argv', 'kwargs', 'new_params'],
-    module=__name__,
 )
 
 

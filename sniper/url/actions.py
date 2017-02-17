@@ -5,7 +5,6 @@ ActionType = Enum('ActionType', ['collection', 'detail'], module=__name__)
 Action = namedtuple(
     'Action',
     ['type', 'method', 'path'],
-    module=__name__,
 )
 
 

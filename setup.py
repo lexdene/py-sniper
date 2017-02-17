@@ -13,6 +13,7 @@ setup(
     author="Elephant Liu",
     author_email="lexdene@gmail.com",
     packages=['sniper'],
+    platforms=['any'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',

@@ -79,6 +79,7 @@ app = TestApp(urls=urls)
 
 class TestUrl(TestCase):
     def setUp(self):
+        self.app = app
         self.client = TestClient(app)
 
     def testTest(self):

@@ -1,3 +1,5 @@
+import asyncio
+
 from sniper.responses import Response
 
 
@@ -18,11 +20,14 @@ class Controller(BaseController):
     def to_response(self, result):
         return Response(result)
 
-    def run(self):
+    async def run(self):
         handler_name = self.get_handler_name()
         handler = getattr(self, handler_name)
 
         result = handler()
+
+        if asyncio.iscoroutine(result):
+            result = await result
 
         response = self.to_response(result)
         return response

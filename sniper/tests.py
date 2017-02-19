@@ -1,4 +1,3 @@
-import asyncio
 import unittest
 from functools import wraps
 
@@ -40,9 +39,7 @@ class TestCase(unittest.TestCase):
 def run_coroutine(f):
 
     @wraps(f)
-    def wrapper(*args, **kwargs):
-        coro = asyncio.coroutine(f)
-        future = coro(*args, **kwargs)
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(future)
+    def wrapper(self, *args, **kwargs):
+        future = f(self, *args, **kwargs)
+        self.app.loop.run_until_complete(future)
     return wrapper

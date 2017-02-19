@@ -11,14 +11,15 @@ Url = namedtuple(
 
 
 class Request:
-    def __init__(self, method, url, headers, body):
+    def __init__(self, app, method, url, headers, body):
+        self.app = app
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
 
     @classmethod
-    def build_from_raw_request(cls, raw_request):
+    def build_from_raw_request(cls, raw_request, app):
         headers = Header(raw_request.headers)
 
         # url
@@ -37,6 +38,7 @@ class Request:
         )
 
         return cls(
+            app=app,
             method=raw_request.method.upper(),
             url=url,
             headers=headers,

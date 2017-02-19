@@ -13,6 +13,8 @@ class BaseApp:
         self.urls = urls
         self.config = config
 
+        self.loop = asyncio.get_event_loop()
+
     async def process_request(self, request):
         try:
             response = await self.get_response(request)
@@ -29,7 +31,7 @@ class BaseApp:
         return response
 
     async def get_response(self, request):
-        request = Request.build_from_raw_request(request)
+        request = Request.build_from_raw_request(request, self)
 
         find_result = self.find_controller(request)
         if find_result:
@@ -41,11 +43,12 @@ class BaseApp:
 
         result = controller_func(request, *argv, **kwargs)
         if isinstance(result, BaseController):
-            response = result.run()
-        else:
-            response = result
+            result = result.run()
 
-        return response.build_raw_response()
+        if asyncio.iscoroutine(result):
+            result = await result
+
+        return result.build_raw_response()
 
     def find_controller(self, request):
         for url in self.urls:
@@ -70,15 +73,14 @@ class BaseApp:
 
 class Application(BaseApp):
     def run(self, port):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.startup(loop, port))
+        self.loop.run_until_complete(self.startup(port))
 
         try:
-            loop.run_forever()
+            self.loop.run_forever()
         except KeyboardInterrupt:
             pass
 
-    async def startup(self, loop, port):
+    async def startup(self, port):
         parser_class = HttpParser  # TODO: parser_class in configs
         await asyncio.start_server(
             parser_class(self.process_request),

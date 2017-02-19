@@ -8,6 +8,10 @@
         url(r'^/$', hello_world),
     ]
 
+Its first argument is a regexp pattern with match the path of request.
+
+Its second argument is a controller function. see [Controller](controller).
+
 ## url with method
 
     from sniper.url import url

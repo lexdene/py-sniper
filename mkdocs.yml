@@ -11,7 +11,8 @@ markdown_extensions:
 pages:
   - Home: 'index.md'
   - Tutorial:
-    - '1 - Url': 'tutorials/url.md'
-    - '2 - Request': 'tutorials/request.md'
-    - '3 - Response': 'tutorials/response.md'
-    - '4 - Resource': 'tutorials/resource.md'
+    - 'Url': 'tutorials/url.md'
+    - 'Controller': 'tutorials/url.md'
+    - 'Request': 'tutorials/request.md'
+    - 'Response': 'tutorials/response.md'
+    - 'Resource': 'tutorials/resource.md'

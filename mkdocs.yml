@@ -12,7 +12,7 @@ pages:
   - Home: 'index.md'
   - Tutorial:
     - 'Url': 'tutorials/url.md'
-    - 'Controller': 'tutorials/url.md'
+    - 'Controller': 'tutorials/controller.md'
     - 'Request': 'tutorials/request.md'
     - 'Response': 'tutorials/response.md'
     - 'Resource': 'tutorials/resource.md'

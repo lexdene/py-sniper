@@ -1,6 +1,8 @@
 sniper
 ======
 
+|travis-status| |docs|
+
 sniper is a Python asynchronous restful web framework base on asyncio.
 
 Hello world
@@ -29,3 +31,11 @@ Documentation
 -------------
 
 see `docs <http://py-sniper.readthedocs.io>`_
+
+.. |travis-status| image:: https://travis-ci.org/lexdene/py-sniper.svg?branch=master
+    :alt: travis status
+    :target: https://travis-ci.org/lexdene/py-sniper
+
+.. |docs| image:: https://readthedocs.org/projects/py-sniper/badge/?version=master
+    :target: http://py-sniper.readthedocs.io/en/master/?badge=master
+    :alt: Documentation Status

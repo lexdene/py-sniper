@@ -1,6 +1,5 @@
-import asyncio
-
-from sniper.responses import Response
+from . import middlewares
+from .responses import Response
 
 
 class BaseController:
@@ -14,23 +13,24 @@ class BaseController:
 
 
 class Controller(BaseController):
-    def get_handler_name(self):
-        return self.kwargs['action']
-
-    def to_response(self, result):
-        return Response(result)
+    MIDDLEWARES = [
+        middlewares.body_to_response,
+        middlewares.handler_by_action,
+    ]
+    _middleware_entry = None   # lazy build
 
     async def run(self):
-        handler_name = self.get_handler_name()
-        handler = getattr(self, handler_name)
+        handler = self._get_middleware_entry()
+        return await handler(self)
 
-        result = handler()
+    @classmethod
+    def _get_middleware_entry(cls):
+        if cls._middleware_entry is None:
+            cls._middleware_entry = middlewares.build_entry(
+                cls.MIDDLEWARES
+            )
 
-        if asyncio.iscoroutine(result):
-            result = await result
-
-        response = self.to_response(result)
-        return response
+        return cls._middleware_entry
 
 
 class NotFoundController(Controller):

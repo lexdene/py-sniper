@@ -2,4 +2,15 @@ language: python
 python:
   - "3.5"
   - "3.6"
-script: python -m unittest discover -v tests/ 'test_*.py'
+  - "nightly"
+  - "pypy3"
+install:
+  - pip install -q flake8 isort
+script:
+  - python -m unittest discover -v tests/ 'test_*.py'
+  - flake8 sniper/ tests/ examples/ setup.py
+  - isort --check-only --recursive sniper/ tests/ examples/ setup.py
+matrix:
+  allow_failures:
+    - python: nightly
+    - python: pypy3

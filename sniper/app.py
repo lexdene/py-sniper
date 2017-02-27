@@ -16,6 +16,12 @@ class BaseApp:
         self.loop = asyncio.get_event_loop()
 
     async def process_request(self, request):
+        logger.info(
+            'BEGIN %s %s',
+            request.method,
+            request.uri,
+        )
+
         try:
             response = await self.get_response(request)
         except Exception as e:

@@ -34,16 +34,16 @@ class UserCtrl(BaseController):
 
 class ArticleCtrl(Controller):
     def retrieve(self):
-        return 'article retrieve %s\n' % self.kwargs['pk']
+        return Response('article retrieve %s\n' % self.kwargs['pk'])
 
     def list(self):
-        return 'article list\n'
+        return Response('article list\n')
 
     def hot(self):
-        return 'get hot articles\n'
+        return Response('get hot articles\n')
 
     def vote(self):
-        return 'vote article %s\n' % self.kwargs['pk']
+        return Response('vote article %s\n' % self.kwargs['pk'])
 
 
 sub_urls = [

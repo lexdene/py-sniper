@@ -14,7 +14,7 @@ class BaseController:
 
 class Controller(BaseController):
     MIDDLEWARES = [
-        middlewares.body_to_response,
+        middlewares.catch_http_errors,
         middlewares.handler_by_action,
     ]
     _middleware_entry = None   # lazy build

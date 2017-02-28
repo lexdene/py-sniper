@@ -37,7 +37,7 @@ class ArticleCtrl(Controller):
             self.request.app.loop,
             'article retrieve %s' % self.kwargs['pk']
         )
-        return 'data is %s\n' % data
+        return Response('data is %s\n' % data)
 
 
 urls = [

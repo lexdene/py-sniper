@@ -1,7 +1,9 @@
 import urllib.parse
 from collections import namedtuple
+from http.cookies import SimpleCookie
 
 from .headers import Header
+from .utils import QueryDict
 
 
 Url = namedtuple(
@@ -17,6 +19,16 @@ class Request:
         self.url = url
         self.headers = headers
         self.body = body
+
+        cookie_header = self.headers.get('Cookie')
+        self.cookie = dict(
+            (key, c.value)
+            for key, c in SimpleCookie(cookie_header).items()
+        )
+
+    @property
+    def query(self):
+        return self.url.query
 
     @classmethod
     def build_from_raw_request(cls, raw_request, app):
@@ -34,7 +46,7 @@ class Request:
             scheme=parse_result.scheme,
             host=host,
             path=parse_result.path,
-            query=urllib.parse.parse_qs(parse_result.query),
+            query=QueryDict(urllib.parse.parse_qs(parse_result.query)),
         )
 
         return cls(

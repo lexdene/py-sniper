@@ -21,3 +21,14 @@ def merge_dict(*args):
         result.update(arg)
 
     return result
+
+
+class QueryDict:
+    def __init__(self, data):
+        self._data = data
+
+    def get(self, name, default=None):
+        if name in self._data:
+            return self._data[name][0]
+        else:
+            return default

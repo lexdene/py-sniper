@@ -2,8 +2,7 @@ import urllib.parse
 from collections import namedtuple
 from http.cookies import SimpleCookie
 
-from .headers import Header
-from .utils import QueryDict
+from .utils import QueryList
 
 
 Url = namedtuple(
@@ -32,21 +31,18 @@ class Request:
 
     @classmethod
     def build_from_raw_request(cls, raw_request, app):
-        headers = Header(raw_request.headers)
+        headers = QueryList(raw_request.headers)
 
         # url
         parse_result = urllib.parse.urlparse(raw_request.uri)
 
-        if 'Host' in headers:
-            host = headers['Host']
-        else:
-            host = parse_result.netloc
+        host = headers.get('Host', parse_result.netloc)
 
         url = Url(
             scheme=parse_result.scheme,
             host=host,
             path=parse_result.path,
-            query=QueryDict(urllib.parse.parse_qs(parse_result.query)),
+            query=QueryList(urllib.parse.parse_qsl(parse_result.query)),
         )
 
         return cls(

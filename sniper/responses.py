@@ -1,14 +1,16 @@
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 
-from .headers import Header
 from .parsers import RawHttpResponse
+from .utils import QueryList
 
 
 class BaseResponse:
     def __init__(self, body, headers,
                  status_code, status_phrase, cookies=None):
-        assert isinstance(headers, Header), 'header must be a Header object'
+        assert isinstance(headers, QueryList), (
+            'header must be a QueryList object'
+        )
 
         self.body = body
         self.headers = headers
@@ -39,7 +41,7 @@ class BaseResponse:
 class Response(BaseResponse):
     def __init__(self, body, headers=None,
                  status_code=200, status_phrase=None, cookies=None):
-        headers = Header(headers or [])
+        headers = QueryList(headers or [])
 
         if status_phrase is None:
             status_phrase = HTTPStatus(status_code).phrase

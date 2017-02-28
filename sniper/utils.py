@@ -23,12 +23,24 @@ def merge_dict(*args):
     return result
 
 
-class QueryDict:
+class QueryList:
     def __init__(self, data):
+        assert isinstance(data, list), 'data must be list'
         self._data = data
 
     def get(self, name, default=None):
-        if name in self._data:
-            return self._data[name][0]
-        else:
-            return default
+        for key, value in self._data:
+            if key == name:
+                return value
+
+        return default
+
+    def getlist(self, name):
+        return [
+            value
+            for key, value in self._data
+            if key == name
+        ]
+
+    def items(self):
+        return iter(self._data)

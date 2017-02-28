@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 
-from .parsers import RawHttpResponse
 from .utils import QueryList
 
 
@@ -19,7 +18,7 @@ class BaseResponse:
 
         self.cookies = SimpleCookie(cookies)
 
-    def build_raw_response(self):
+    def freeze_headers(self):
         headers = [
             ('Content-Length', len(self.body)),
         ]
@@ -29,13 +28,7 @@ class BaseResponse:
         for v in self.cookies.values():
             headers.append(('Set-Cookie', v.OutputString()))
 
-        return RawHttpResponse(
-            http_version='1.1',
-            status_code=self.status_code,
-            reason_phrase=self.status_phrase,
-            body=self.body,
-            headers=headers,
-        )
+        return QueryList(headers)
 
 
 class Response(BaseResponse):

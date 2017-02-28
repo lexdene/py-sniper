@@ -2,8 +2,8 @@ import asyncio
 import logging
 
 from .controllers import BaseController, NotFoundController
-from .parsers import HttpParser, RawHttpResponse
-from .requests import Request
+from .parsers import HttpParser
+from .responses import Response
 
 logger = logging.getLogger('sniper.application')
 
@@ -19,7 +19,7 @@ class BaseApp:
         logger.info(
             'BEGIN %s %s',
             request.method,
-            request.uri,
+            request.raw_uri,
         )
 
         try:
@@ -31,14 +31,12 @@ class BaseApp:
         logger.info(
             '%s %s %d',
             request.method,
-            request.uri,
+            request.raw_uri,
             response.status_code
         )
         return response
 
     async def get_response(self, request):
-        request = Request.build_from_raw_request(request, self)
-
         find_result = self.find_controller(request)
         if find_result:
             controller_func, argv, kwargs = find_result
@@ -54,7 +52,7 @@ class BaseApp:
         if asyncio.iscoroutine(result):
             result = await result
 
-        return result.build_raw_response()
+        return result
 
     def find_controller(self, request):
         for url in self.urls:
@@ -63,18 +61,10 @@ class BaseApp:
                 return match
 
     def _build_response_for_exception(self, request, exception):
-        body = str(exception) + '\n'
-
-        response = RawHttpResponse(
-            http_version='1.1',
+        return Response(
+            body=str(exception) + '\n',
             status_code=500,
-            reason_phrase="inter server error",
-            headers=[
-                ('Content-Length', len(body)),
-            ],
-            body=body,
         )
-        return response
 
 
 class Application(BaseApp):
@@ -89,7 +79,7 @@ class Application(BaseApp):
     async def startup(self, port):
         parser_class = HttpParser  # TODO: parser_class in configs
         await asyncio.start_server(
-            parser_class(self.process_request),
+            parser_class(self, self.process_request),
             port=port,
         )
         logger.info('server started on port %s' % port)

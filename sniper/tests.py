@@ -2,7 +2,7 @@ import unittest
 from functools import wraps
 
 from .app import BaseApp
-from .parsers import RawHttpRequest
+from .requests import Request
 
 
 class TestClient:
@@ -10,12 +10,12 @@ class TestClient:
         self.app = app
 
     async def request(self, method, path, query=None, body=None, headers=None):
-        request = RawHttpRequest(
-            method=method,
+        request = Request(
+            app=self.app,
+            method=method.upper(),
             uri=path,
-            http_version='1.1',
-            headers=headers or [],
-            body=body or '',
+            headers=headers,
+            body=body,
         )
         response = await self.app.process_request(request)
         return response

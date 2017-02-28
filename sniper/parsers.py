@@ -2,6 +2,9 @@ import asyncio
 import re
 from collections import namedtuple
 
+from .requests import Request
+
+
 HTTP_LINE_SEPARATOR = b'\r\n'
 START_LINE_REGEXP = re.compile(
     r'^(?P<method>\w+) (?P<uri>.+) HTTP/(?P<version>[0-9.]+)$'
@@ -12,11 +15,11 @@ class ParseError(ValueError):
     pass
 
 
-RawHttpRequest = namedtuple(
+_RawHttpRequest = namedtuple(
     'RawHttpRequest',
     ['method', 'uri', 'http_version', 'headers', 'body'],
 )
-RawHttpResponse = namedtuple(
+_RawHttpResponse = namedtuple(
     'RawHttpResponse',
     ['http_version', 'status_code', 'reason_phrase', 'headers', 'body'],
 )
@@ -27,7 +30,8 @@ class BaseParser:
 
 
 class HttpParser(BaseParser):
-    def __init__(self, process_func):
+    def __init__(self, app, process_func):
+        self.app = app
         self.process_func = process_func
 
     async def __call__(self, reader, writer):
@@ -71,15 +75,18 @@ class HttpParser(BaseParser):
             else:
                 body = ''
 
-            request = RawHttpRequest(
+            request = _RawHttpRequest(
                 method=method,
                 uri=uri,
                 http_version=http_version,
                 headers=headers,
                 body=body,
             )
+            request = self.build_request(request)
 
             response = await self.process_func(request)
+            response = self.build_raw_response(response)
+
             await self.write_response(writer, response)
 
     async def _read_http_line_from_reader(self, reader, *, coding='utf-8'):
@@ -108,6 +115,24 @@ class HttpParser(BaseParser):
             )
         else:
             raise ParseError('can not parse start line', start_line)
+
+    def build_request(self, raw_request):
+        return Request(
+            app=self.app,
+            method=raw_request.method.upper(),
+            uri=raw_request.uri,
+            headers=raw_request.headers,
+            body=raw_request.body,
+        )
+
+    def build_raw_response(self, response):
+        return _RawHttpResponse(
+            http_version='1.1',
+            status_code=response.status_code,
+            reason_phrase=response.status_phrase,
+            body=response.body,
+            headers=list(response.freeze_headers.items()),
+        )
 
     async def write_response(self, writer, response):
         await self._write_http_line_to_writer(

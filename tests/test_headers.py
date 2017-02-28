@@ -116,7 +116,7 @@ class TestHeaders(TestCase):
             200
         )
         self.assertEqual(
-            dict(r.headers).get('X-Name'),
+            r.freeze_headers().get('X-Name'),
             'Elephant'
         )
 
@@ -130,7 +130,7 @@ class TestHeaders(TestCase):
             200
         )
         self.assertEqual(
-            dict(r.headers).get('Set-Cookie'),
+            r.freeze_headers().get('Set-Cookie'),
             'name=Elephant'
         )
 
@@ -144,6 +144,6 @@ class TestHeaders(TestCase):
             200
         )
         self.assertEqual(
-            dict(r.headers).get('Set-Cookie'),
+            r.freeze_headers().get('Set-Cookie'),
             'name=Elephant'
         )

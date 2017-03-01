@@ -131,7 +131,7 @@ class HttpParser(BaseParser):
             status_code=response.status_code,
             reason_phrase=response.status_phrase,
             body=response.body,
-            headers=list(response.freeze_headers.items()),
+            headers=list(response.freeze_headers().items()),
         )
 
     async def write_response(self, writer, response):

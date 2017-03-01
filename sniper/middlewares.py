@@ -33,7 +33,12 @@ async def body_to_response(controller, get_response):
 
 async def json_data(controller, get_response):
     result = await get_response(controller)
-    return Response(json.dumps(result))
+    return Response(
+        json.dumps(result),
+        headers=[
+            ('Content-Type', 'application/json'),
+        ]
+    )
 
 
 def build_entry(middleware_list):

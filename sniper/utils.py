@@ -1,3 +1,7 @@
+import random
+import string
+
+
 def cached_property(func):
     return _CachedProperty(func)
 
@@ -44,3 +48,10 @@ class QueryList:
 
     def items(self):
         return iter(self._data)
+
+
+_DEFAULT_ALLOWED_CHARS = string.ascii_lowercase + string.digits
+
+
+def random_string(allowed_chars=_DEFAULT_ALLOWED_CHARS, length=32):
+    return ''.join(random.choice(allowed_chars) for _ in range(length))

@@ -9,9 +9,13 @@ logger = logging.getLogger('sniper.application')
 
 
 class BaseApp:
-    def __init__(self, urls=[], config=None):
+    def __init__(self, urls=[], config=None,
+                 session_cls=None, session_store=None):
         self.urls = urls
         self.config = config
+
+        self.session_cls = session_cls
+        self.session_store = session_store
 
         self.loop = asyncio.get_event_loop()
 

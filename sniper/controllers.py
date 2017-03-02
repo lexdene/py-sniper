@@ -1,5 +1,6 @@
 from . import middlewares
 from .responses import Response
+from .sessions import session_middleware
 
 
 class BaseController:
@@ -8,6 +9,8 @@ class BaseController:
         self.argv = argv
         self.kwargs = kwargs
 
+        self.app = request.app
+
     def run(self):
         raise NotImplementedError
 
@@ -15,6 +18,7 @@ class BaseController:
 class Controller(BaseController):
     MIDDLEWARES = [
         middlewares.catch_http_errors,
+        session_middleware,
         middlewares.handler_by_action,
     ]
     _middleware_entry = None   # lazy build

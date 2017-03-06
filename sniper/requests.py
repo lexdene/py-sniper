@@ -1,16 +1,11 @@
 import cgi
 import json
 import urllib.parse
-from collections import namedtuple
 from http.cookies import SimpleCookie
 from io import BytesIO
 
+from .http import Url
 from .utils import QueryList, cached_property
-
-Url = namedtuple(
-    'Url',
-    ['scheme', 'host', 'path', 'query'],
-)
 
 
 class Request:
@@ -22,14 +17,9 @@ class Request:
         self.body = body or ''
 
         # url
-        parse_result = urllib.parse.urlparse(uri)
-        host = self.headers.get('Host', parse_result.netloc)
-
-        self.url = Url(
-            scheme=parse_result.scheme,
-            host=host,
-            path=parse_result.path,
-            query=QueryList(urllib.parse.parse_qsl(parse_result.query)),
+        self.url = Url.from_uri(
+            uri,
+            host=self.headers.get('Host')
         )
 
         cookie_header = self.headers.get('Cookie')

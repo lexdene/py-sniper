@@ -39,6 +39,16 @@ class QueryList:
 
         return default
 
+    def set(self, name, value):
+        for index, line in enumerate(self._data):
+            k, v = line
+
+            if k == name:
+                self._data[index] = (name, value)
+                return
+
+        self._data.append((name, value))
+
     def getlist(self, name):
         return [
             value
@@ -48,6 +58,9 @@ class QueryList:
 
     def items(self):
         return iter(self._data)
+
+    def copy(self):
+        return self.__class__(list(self._data))
 
 
 _DEFAULT_ALLOWED_CHARS = string.ascii_lowercase + string.digits

@@ -34,4 +34,15 @@ Here is a simple "Hello world" example web app for sniper:
         )
         app.run(8888)
 
+## Contributing
+
+Source code can be found on [Github][].
+
+Feature requests, bug reports and other issues can be raised on the [GitHub issue tracker][].
+
+Pull requests can be sent on the [Github pull requests][].
+
 [asyncio]: https://docs.python.org/3/library/asyncio.html "Python asyncio library"
+[Github]: https://github.com/lexdene/py-sniper "py-sniper on github"
+[Github issue tracker]: https://github.com/lexdene/py-sniper/issues "issues of py-sniper"
+[Github pull requests]: https://github.com/lexdene/py-sniper/pulls "pull requests of py-sniper"

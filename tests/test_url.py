@@ -182,6 +182,18 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
+    async def testResourceEdit(self):
+        r = await self.client.get('/users/123/edit')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'action = edit, pk = 123\n'
+        )
+
+    @run_coroutine
     async def testResourceList(self):
         r = await self.client.get('/users')
         self.assertEqual(
@@ -203,6 +215,18 @@ class TestUrl(TestCase):
         self.assertEqual(
             r.body,
             'action = create, pk = \n'
+        )
+
+    @run_coroutine
+    async def testResourceNew(self):
+        r = await self.client.get('/users/new')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'action = new, pk = \n'
         )
 
     @run_coroutine

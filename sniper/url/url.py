@@ -1,10 +1,10 @@
 from collections import namedtuple
+from itertools import chain
 
 from sniper.utils import merge_dict
 
 from . import patterns
-from .actions import ActionType
-
+from .actions import Action, ActionType
 
 ResolveResult = namedtuple(
     'ResolveResult',
@@ -85,31 +85,63 @@ def url(regexp, controller, method=None, data=None):
 
 
 def verb(method, controller, data=None):
-    # a better name for this function?
     return resolver(patterns.MethodPattern(method), controller, data=data)
 
 
-def resource(name, controller, actions=[], children=[]):
+def _build_default_actions():
     LIST_METHOD_ACTIONS = (
-        ('GET', 'list'),
-        ('POST', 'create'),
+        ('GET', '', 'list'),
+        ('POST', '', 'create'),
+        ('GET', 'new', 'new'),
     )
     DETAIL_METHOD_ACTIONS = (
-        ('GET', 'retrieve'),
-        ('PUT', 'update'),
-        ('PATCH', 'partial_update'),
-        ('DELETE', 'destroy'),
+        ('GET', '', 'retrieve'),
+        ('PUT', '', 'update'),
+        ('PATCH', '', 'partial_update'),
+        ('DELETE', '', 'destroy'),
+        ('GET', 'edit', 'edit'),
     )
 
+    return tuple(chain(
+        (
+            Action(
+                type=ActionType.collection,
+                method=method,
+                path=path,
+                action=action
+            )
+            for method, path, action in LIST_METHOD_ACTIONS
+        ),
+        (
+            Action(
+                type=ActionType.detail,
+                method=method,
+                path=path,
+                action=action,
+            )
+            for method, path, action in DETAIL_METHOD_ACTIONS
+        )
+    ))
+
+
+DEFAULT_ACTIONS = _build_default_actions()
+
+
+def resource(name, controller, actions=[], children=[]):
     list_action_urls = []
     detail_action_urls = []
 
-    for action in actions:
+    for action in chain(DEFAULT_ACTIONS, actions):
+        if action.path:
+            regexp = r'^/%s$' % action.path
+        else:
+            regexp = r'^$'
+
         _url = url(
-            r'^/%s$' % action.path,
+            regexp,
             controller,
             method=action.method,
-            data={'action': action.path}
+            data={'action': action.action}
         )
 
         if action.type == ActionType.collection:
@@ -120,24 +152,8 @@ def resource(name, controller, actions=[], children=[]):
     return url(
         r'^/' + name,
         include([
-            # list
-            url(
-                r'^$',
-                include(
-                    verb(method, controller, data={'action': action})
-                    for method, action in LIST_METHOD_ACTIONS
-                )
-            ),
             # list actions
             *list_action_urls,
-            # detail
-            url(
-                r'^/(?P<pk>\w+)$',
-                include(
-                    verb(method, controller, data={'action': action})
-                    for method, action in DETAIL_METHOD_ACTIONS
-                )
-            ),
             # detail actions
             url(
                 r'^/(?P<pk>\w+)',

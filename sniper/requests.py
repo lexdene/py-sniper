@@ -43,7 +43,11 @@ class Request:
         media_type = content_type.media_type
 
         if media_type == 'application/json':
-            return json.loads(self.body)
+            return json.loads(
+                self.body.decode(
+                    content_type.params.get('charset', 'utf-8')
+                )
+            )
         elif media_type == 'application/x-www-form-urlencoded':
             return QueryList.parse_str(self.body.decode('ascii'))
         elif media_type == 'multipart/form-data':

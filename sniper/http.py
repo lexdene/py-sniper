@@ -47,5 +47,5 @@ class Url(UrlStruct):
             scheme=parse_result.scheme,
             host=host,
             path=parse_result.path,
-            query=QueryList(urllib.parse.parse_qsl(parse_result.query)),
+            query=QueryList.parse_str(parse_result.query),
         )

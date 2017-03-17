@@ -1,6 +1,5 @@
 import cgi
 import json
-import urllib.parse
 from http.cookies import SimpleCookie
 from io import BytesIO
 
@@ -47,7 +46,7 @@ class Request:
         if media_type == 'application/json':
             return json.loads(self.body)
         elif media_type == 'application/x-www-form-urlencoded':
-            return QueryList(urllib.parse.parse_qsl(self.body))
+            return QueryList.parse_str(self.body)
         elif media_type == 'multipart/form-data':
             return cgi.parse_multipart(
                 BytesIO(self.body.encode('utf-8')),

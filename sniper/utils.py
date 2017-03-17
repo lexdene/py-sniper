@@ -1,5 +1,6 @@
 import random
 import string
+import urllib.parse
 
 
 def cached_property(func):
@@ -32,6 +33,14 @@ class QueryList:
         assert isinstance(data, list), 'data must be list'
         self._data = data
 
+    def __str__(self):
+        return '<QueryList %s>' % ', '.join(
+            (
+                '%s: %s' % (repr(key), repr(value))
+                for key, value in self.items()
+            )
+        )
+
     def get(self, name, default=None):
         for key, value in self._data:
             if key == name:
@@ -61,6 +70,10 @@ class QueryList:
 
     def copy(self):
         return self.__class__(list(self._data))
+
+    @classmethod
+    def parse_str(cls, s):
+        return cls(urllib.parse.parse_qsl(s, keep_blank_values=True))
 
 
 _DEFAULT_ALLOWED_CHARS = string.ascii_lowercase + string.digits

@@ -1,9 +1,7 @@
-import cgi
 import json
 from http.cookies import SimpleCookie
-from io import BytesIO
 
-from .http import Url
+from .http import ContentType, Url, parse_multipart
 from .utils import QueryList, cached_property
 
 
@@ -34,23 +32,19 @@ class Request:
         return self.url.query
 
     @cached_property
+    def content_type(self):
+        s = self.headers.get('Content-Type')
+
+        return ContentType.parse_str(s)
+
+    @cached_property
     def data(self):
-        content_type = self.headers.get('Content-Type')
-        parts = content_type.split(';')
-        media_type = parts.pop(0)
-
-        params = {}
-
-        for p in parts:
-            key, value = p.strip().split('=', 1)
-            params[key] = value.encode('utf-8')
+        content_type = self.content_type
+        media_type = content_type.media_type
 
         if media_type == 'application/json':
             return json.loads(self.body)
         elif media_type == 'application/x-www-form-urlencoded':
             return QueryList.parse_str(self.body.decode('ascii'))
         elif media_type == 'multipart/form-data':
-            return cgi.parse_multipart(
-                BytesIO(self.body),
-                params
-            )
+            return parse_multipart(self.body, content_type.params)

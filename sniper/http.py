@@ -1,5 +1,7 @@
+import cgi
 import urllib.parse
 from collections import namedtuple
+from io import BytesIO
 
 from .utils import QueryList
 
@@ -49,3 +51,35 @@ class Url(UrlStruct):
             path=parse_result.path,
             query=QueryList.parse_str(parse_result.query),
         )
+
+
+class ContentType:
+    def __init__(self, media_type, params):
+        assert isinstance(params, QueryList), (
+            'params must be QueryList'
+        )
+
+        self.media_type = media_type
+        self.params = params
+
+    @classmethod
+    def parse_str(cls, s):
+        parts = s.split(';')
+        media_type = parts.pop(0)
+
+        params = QueryList([
+            tuple(p.strip().split('=', 1))
+            for p in parts
+        ])
+
+        return cls(media_type, params)
+
+
+def parse_multipart(body, params):
+    return cgi.parse_multipart(
+        BytesIO(body),
+        {
+            key: value.encode('ascii')
+            for key, value in params.items()
+        }
+    )

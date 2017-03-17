@@ -32,6 +32,9 @@ class TestClient:
                 ('Cookie', cookie_header)
             )
 
+        if body and isinstance(body, str):
+            body = body.encode('utf-8')
+
         request = Request(
             app=self.app,
             method=method.upper(),

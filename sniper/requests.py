@@ -10,10 +10,12 @@ from .utils import QueryList, cached_property
 class Request:
     def __init__(self, app, method, uri, headers=None, body=None):
         self.app = app
-        self.method = method
+        self.method = method.upper()
         self.raw_uri = uri
         self.headers = QueryList(headers or [])
-        self.body = body or ''
+        self.body = body or b''
+
+        assert isinstance(self.body, bytes), 'body must be bytes'
 
         # url
         self.url = Url.from_uri(
@@ -46,9 +48,9 @@ class Request:
         if media_type == 'application/json':
             return json.loads(self.body)
         elif media_type == 'application/x-www-form-urlencoded':
-            return QueryList.parse_str(self.body)
+            return QueryList.parse_str(self.body.decode('ascii'))
         elif media_type == 'multipart/form-data':
             return cgi.parse_multipart(
-                BytesIO(self.body.encode('utf-8')),
+                BytesIO(self.body),
                 params
             )

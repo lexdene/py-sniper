@@ -58,6 +58,15 @@ class QueryList:
 
         self._data.append((name, value))
 
+    def setdefault(self, name, value):
+        for line in self._data:
+            k, v = line
+
+            if k == name:
+                return
+
+        self._data.append((name, value))
+
     def getlist(self, name):
         return [
             value
@@ -73,7 +82,15 @@ class QueryList:
 
     @classmethod
     def parse_str(cls, s):
-        return cls(urllib.parse.parse_qsl(s, keep_blank_values=True))
+        if s:
+            l = urllib.parse.parse_qsl(
+                s,
+                keep_blank_values=True,
+                strict_parsing=True
+            )
+        else:
+            l = []
+        return cls(l)
 
 
 _DEFAULT_ALLOWED_CHARS = string.ascii_lowercase + string.digits

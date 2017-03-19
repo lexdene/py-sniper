@@ -149,6 +149,7 @@ def resource(name, controller, actions=[], children=[]):
         elif action.type == ActionType.detail:
             detail_action_urls.append(_url)
 
+    base_path = '/' + name
     return url(
         r'^/' + name,
         include([
@@ -159,5 +160,6 @@ def resource(name, controller, actions=[], children=[]):
                 r'^/(?P<pk>\w+)',
                 include(detail_action_urls)
             ),
-        ])
+        ]),
+        data={'resource_base_path': base_path}
     )

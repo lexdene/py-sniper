@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from .controllers import BaseController, NotFoundController
-from .parsers import HttpParser
+from .parsers import HttpParser, ParseError
 from .responses import Response
 
 logger = logging.getLogger('sniper.application')

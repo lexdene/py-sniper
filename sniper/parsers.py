@@ -110,10 +110,13 @@ class HttpParser(BaseParser):
         for key in ('method', 'uri'):
             kwargs[key] = getattr(raw_request, key).decode(HEADER_ENCODING)
 
-        headers = [
-            (key.decode(HEADER_ENCODING), value.decode(HEADER_ENCODING))
-            for key, value in raw_request.headers
-        ]
+        try:
+            headers = [
+                (key.decode(HEADER_ENCODING), value.decode(HEADER_ENCODING))
+                for key, value in raw_request.headers
+            ]
+        except UnicodeDecodeError:
+            raise ParseError('contains non-ascii character in header')
 
         return Request(
             app=self.app,

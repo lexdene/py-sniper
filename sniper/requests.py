@@ -1,4 +1,5 @@
 import json
+from urllib.parse import unquote
 from http.cookies import SimpleCookie
 
 from .http import ContentType, Url, parse_multipart
@@ -21,12 +22,6 @@ class Request:
             host=self.headers.get('Host')
         )
 
-        cookie_header = self.headers.get('Cookie')
-        self.cookie = dict(
-            (key, c.value)
-            for key, c in SimpleCookie(cookie_header).items()
-        )
-
     @property
     def query(self):
         return self.url.query
@@ -36,6 +31,14 @@ class Request:
         s = self.headers.get('Content-Type')
 
         return ContentType.parse_str(s)
+
+    @cached_property
+    def cookie(self):
+        cookie_header = self.headers.get('Cookie')
+        return dict(
+            (key, unquote(c.value))
+            for key, c in SimpleCookie(cookie_header).items()
+        )
 
     @cached_property
     def data(self):

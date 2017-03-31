@@ -1,6 +1,6 @@
 import json
-from urllib.parse import unquote
 from http.cookies import SimpleCookie
+from urllib.parse import unquote
 
 from .http import ContentType, Url, parse_multipart
 from .utils import QueryList, cached_property

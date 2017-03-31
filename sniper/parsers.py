@@ -1,4 +1,3 @@
-import asyncio
 import itertools
 import re
 from collections import namedtuple
@@ -31,53 +30,49 @@ class BaseParser:
 
 
 class HttpParser(BaseParser):
-    def __init__(self, app, process_func):
+    def __init__(self, app):
         self.app = app
-        self.process_func = process_func
 
-    async def __call__(self, reader, writer):
+    async def read_request(self, reader):
+        start_line = await self._read_http_line_from_reader(reader)
+
+        method, uri, http_version = self._parse_start_line(start_line)
+
+        headers = []
+        content_length = 0
+
         while True:
-            try:
-                start_line = await self._read_http_line_from_reader(reader)
-            except asyncio.IncompleteReadError:
+            line = await self._read_http_line_from_reader(reader)
+            if not line:
+                # header part ends
                 break
 
-            method, uri, http_version = self._parse_start_line(start_line)
+            name, value = line.split(b':', 1)
+            value = value.strip()
+            headers.append((name, value))
 
-            headers = []
-            content_length = 0
+            if name.lower() == b'content-length':
+                content_length = int(value)
 
-            while True:
-                line = await self._read_http_line_from_reader(reader)
-                if not line:
-                    # header part ends
-                    break
+        if content_length > 0:
+            body = await reader.readexactly(content_length)
+        else:
+            body = b''
 
-                name, value = line.split(b':', 1)
-                value = value.strip()
-                headers.append((name, value))
+        request = _RawHttpRequest(
+            method=method,
+            uri=uri,
+            http_version=http_version,
+            headers=headers,
+            body=body,
+        )
+        request = self.build_request(request)
 
-                if name.lower() == b'content-length':
-                    content_length = int(value)
+        return request
 
-            if content_length > 0:
-                body = await reader.readexactly(content_length)
-            else:
-                body = b''
-
-            request = _RawHttpRequest(
-                method=method,
-                uri=uri,
-                http_version=http_version,
-                headers=headers,
-                body=body,
-            )
-            request = self.build_request(request)
-
-            response = await self.process_func(request)
-            response = self.build_raw_response(response)
-
-            await self.write_response(writer, response)
+    async def write_response(self, writer, response):
+        response = self.build_raw_response(response)
+        await self.write_raw_response(writer, response)
 
     async def _read_http_line_from_reader(self, reader):
         line = await reader.readuntil(HTTP_LINE_SEPARATOR)
@@ -153,7 +148,7 @@ class HttpParser(BaseParser):
             ],
         )
 
-    async def write_response(self, writer, response):
+    async def write_raw_response(self, writer, response):
         await self._write_http_line_to_writer(
             writer,
             b'HTTP/%s %d %s' % (

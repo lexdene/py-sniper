@@ -31,9 +31,7 @@ class BaseResponse:
         self.cookies = SimpleCookie(cookies)
 
     def freeze_headers(self):
-        headers = [
-            ('Content-Length', str(len(self.body))),
-        ]
+        headers = []
 
         contains_content_type = False
         for key, value in self.headers.items():

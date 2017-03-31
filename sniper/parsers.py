@@ -1,9 +1,9 @@
 import asyncio
+import itertools
 import re
 from collections import namedtuple
 
 from .requests import Request
-
 
 HEADER_ENCODING = 'ascii'  # am i right?
 HTTP_LINE_SEPARATOR = b'\r\n'
@@ -136,6 +136,10 @@ class HttpParser(BaseParser):
         if isinstance(body, str):
             body = body.encode(response.charset)
 
+        headers = [
+            ('Content-Length', str(len(body))),
+        ]
+
         return _RawHttpResponse(
             http_version=b'1.1',
             status_code=response.status_code,
@@ -143,7 +147,9 @@ class HttpParser(BaseParser):
             body=body,
             headers=[
                 (key.encode(HEADER_ENCODING), value.encode(HEADER_ENCODING))
-                for key, value in response.freeze_headers().items()
+                for key, value in itertools.chain(
+                    headers, response.freeze_headers().items()
+                )
             ],
         )
 

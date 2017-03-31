@@ -5,6 +5,13 @@ sniper
 
 sniper is a Python asynchronous restful web framework base on asyncio.
 
+Advantage
+---------
+
+* It is a very small framework
+* It supports non-blocking, asynchronous web application development (thanks to Python's asyncio library) which has better performance in high concurrency situation
+* It has no dependencies except Python itself
+
 Hello world
 -----------
 

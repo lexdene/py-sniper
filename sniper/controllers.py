@@ -1,3 +1,5 @@
+import json
+
 from . import middlewares
 from .responses import Response
 from .sessions import session_middleware
@@ -19,6 +21,7 @@ class Controller(BaseController):
     MIDDLEWARES = [
         middlewares.catch_http_errors,
         session_middleware,
+        middlewares.ret_to_response,
         middlewares.handler_by_action,
     ]
     _middleware_entry = None   # lazy build
@@ -26,6 +29,9 @@ class Controller(BaseController):
     async def run(self):
         handler = self._get_middleware_entry()
         return await handler(self)
+
+    def create_response(self, ret):
+        return Response(ret)
 
     @classmethod
     def _get_middleware_entry(cls):
@@ -46,3 +52,17 @@ class NotFoundController(Controller):
             ),
             status_code=404,
         )
+
+
+class JsonResponseMixin:
+    def create_response(self, ret):
+        return Response(
+            json.dumps(ret),
+            headers=[
+                ('Content-Type', 'application/json'),
+            ]
+        )
+
+
+class JsonController(JsonResponseMixin, Controller):
+    pass

@@ -1,5 +1,4 @@
 import asyncio
-import json
 
 from .exceptions import HttpError
 from .responses import Response
@@ -16,6 +15,18 @@ async def handler_by_action(controller, get_response):
     return result
 
 
+async def ret_to_response(controller, get_response):
+    ret = await get_response(controller)
+
+    if not isinstance(ret, Response):
+        ret = controller.create_response(ret)
+
+        if asyncio.iscoroutine(ret):
+            ret = await ret
+
+    return ret
+
+
 async def catch_http_errors(controller, get_response):
     try:
         return await get_response(controller)
@@ -24,21 +35,6 @@ async def catch_http_errors(controller, get_response):
             body=e.detail,
             status_code=e.status_code
         )
-
-
-async def body_to_response(controller, get_response):
-    result = await get_response(controller)
-    return Response(result)
-
-
-async def json_data(controller, get_response):
-    result = await get_response(controller)
-    return Response(
-        json.dumps(result),
-        headers=[
-            ('Content-Type', 'application/json'),
-        ]
-    )
 
 
 def build_entry(middleware_list):

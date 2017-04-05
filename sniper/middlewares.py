@@ -5,8 +5,7 @@ from .responses import Response
 
 
 async def handler_by_action(controller, get_response):
-    action = controller.kwargs.get('action', 'handle')
-    handler = getattr(controller, action)
+    handler = getattr(controller, controller.action)
     result = handler()
 
     if asyncio.iscoroutine(result):

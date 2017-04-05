@@ -26,6 +26,11 @@ class Controller(BaseController):
     ]
     _middleware_entry = None   # lazy build
 
+    def __init__(self, *argv, **kwargs):
+        super().__init__(*argv, **kwargs)
+
+        self.action = self.kwargs.get('action', 'handle')
+
     async def run(self):
         handler = self._get_middleware_entry()
         return await handler(self)

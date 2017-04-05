@@ -92,6 +92,13 @@ class QueryList:
             l = []
         return cls(l)
 
+    def __contains__(self, name):
+        for key, _ in self._data:
+            if key == name:
+                return True
+
+        return False
+
 
 _DEFAULT_ALLOWED_CHARS = string.ascii_lowercase + string.digits
 

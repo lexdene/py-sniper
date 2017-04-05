@@ -21,6 +21,8 @@ class BaseApp:
         self.parser_class = parser_class or HttpParser
         self._parser = None
 
+        self.next_connection_id = 0
+
         self.loop = asyncio.get_event_loop()
 
     @property
@@ -100,9 +102,13 @@ class Application(BaseApp):
         logger.info('server started on port %s' % port)
 
     async def _client_connected(self, reader, writer):
+        connection_id = self.next_connection_id
+        self.next_connection_id += 1
+
+        logger.debug('%d connected', connection_id)
         while True:
             if reader.at_eof():
-                logger.debug('connection closed')
+                logger.debug('%d connection closed', connection_id)
                 break
 
             try:

@@ -100,6 +100,8 @@ def _build_default_actions():
         ('PATCH', '', 'partial_update'),
         ('DELETE', '', 'destroy'),
         ('GET', 'edit', 'edit'),
+        ('POST', 'update', 'update'),
+        ('POST', 'destroy', 'destroy'),
     )
 
     return tuple(chain(

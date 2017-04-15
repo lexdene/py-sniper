@@ -1,11 +1,15 @@
 import asyncio
 
-from .exceptions import HttpError
+from .exceptions import HttpError, MethodNotAllowed
 from .responses import Response
 
 
 async def handler_by_action(controller, get_response):
-    handler = getattr(controller, controller.action)
+    try:
+        handler = getattr(controller, controller.action)
+    except AttributeError:
+        raise MethodNotAllowed()
+
     result = handler()
 
     if asyncio.iscoroutine(result):

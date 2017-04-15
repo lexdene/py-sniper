@@ -9,3 +9,8 @@ class HttpError(Exception):
 class BadRequest(HttpError):
     status_code = 400
     detail = 'bad request'
+
+
+class MethodNotAllowed(HttpError):
+    status_code = 405
+    detail = 'method not allowed'

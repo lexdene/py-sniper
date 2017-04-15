@@ -5,45 +5,77 @@ from sniper.url import collection, detail, include, resource, url
 
 
 def test(request):
-    return Response('Hello world!\n')
+    return Response('Hello world!')
 
 
 def test_url_param(request, name):
-    return Response('name is %s.\n' % name)
+    return Response('name is %s.' % name)
 
 
 class TestPostOnlyCtrl(BaseController):
     def run(self):
-        return Response('method is %s\n' % self.request.method)
+        return Response('method is %s' % self.request.method)
 
 
 class TestChildCtrl(BaseController):
     def run(self):
-        return Response('Hello from child!\n')
+        return Response('Hello from child!')
+
+
+def item_ctrl(request, action, pk='', resource_base_path=''):
+    if pk:
+        return Response(
+            'items: %s %s' % (
+                action, pk
+            )
+        )
+    else:
+        return Response(
+            'items: %s' % action
+        )
 
 
 class UserCtrl(BaseController):
     def run(self):
-        return Response(
-            'action = %s, pk = %s\n' % (
-                self.kwargs.get('action', ''),
-                self.kwargs.get('pk', ''),
+        action = self.kwargs.get('action', '')
+        pk = self.kwargs.get('pk', '')
+
+        if pk:
+            return Response(
+                'users: %s %s' % (
+                    action, pk
+                )
             )
-        )
+        else:
+            return Response(
+                'users: %s' % action
+            )
 
 
 class ArticleCtrl(Controller):
     def retrieve(self):
-        return Response('article retrieve %s\n' % self.kwargs['pk'])
+        return Response('articles: retrieve %s' % self.kwargs['pk'])
+
+    def destroy(self):
+        return Response('articles: destroy %s' % self.kwargs['pk'])
+
+    def edit(self):
+        return Response('articles: edit %s' % self.kwargs['pk'])
 
     def list(self):
-        return Response('article list\n')
+        return Response('articles: list')
 
-    def hot(self):
-        return Response('get hot articles\n')
+    def create(self):
+        return Response('articles: create')
 
-    def vote(self):
-        return Response('vote article %s\n' % self.kwargs['pk'])
+    def new(self):
+        return Response('articles: new')
+
+    def foo(self):
+        return Response('articles: foo')
+
+    def bar(self):
+        return Response('articles: bar %s' % self.kwargs['pk'])
 
 
 sub_urls = [
@@ -57,19 +89,27 @@ urls = [
     url(r'^/test-url-param/(?P<name>\w+)$', test_url_param),
     url(r'^/test-url-data$', test_url_param, data={'name': 'Elephant'}),
     resource(
+        'items',
+        item_ctrl,
+        actions=[
+            collection.get('foo'),
+            detail.post('bar'),
+        ],
+    ),
+    resource(
         'users',
         UserCtrl,
         actions=[
-            collection.get('hot'),
-            detail.post('connect'),
+            collection.get('foo'),
+            detail.post('bar'),
         ],
     ),
     resource(
         'articles',
         ArticleCtrl,
         actions=[
-            collection.get('hot'),
-            detail.post('vote'),
+            collection.get('foo'),
+            detail.post('bar'),
         ],
     ),
 ]
@@ -82,11 +122,8 @@ class TestUrl(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    def testTest(self):
-        self.assertEqual(1, 1)
-
     @run_coroutine
-    async def testSimpleGet(self):
+    async def test_simple_get(self):
         r = await self.client.get('/test')
         self.assertEqual(
             r.status_code,
@@ -94,11 +131,11 @@ class TestUrl(TestCase):
         )
         self.assertEqual(
             r.body,
-            'Hello world!\n'
+            'Hello world!'
         )
 
     @run_coroutine
-    async def testNotFound(self):
+    async def test_not_found(self):
         r = await self.client.get('/test/xxx')
         self.assertEqual(
             r.status_code,
@@ -106,7 +143,7 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
-    async def testPostPostOnlySuccess(self):
+    async def test_post_post_only_success(self):
         r = await self.client.post('/test/post-only')
         self.assertEqual(
             r.status_code,
@@ -114,7 +151,7 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
-    async def testGetPostOnlyNotFound(self):
+    async def test_get_post_only_not_found(self):
         r = await self.client.get('/test/post-only')
         self.assertEqual(
             r.status_code,
@@ -122,7 +159,7 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
-    async def testIncludeUrl(self):
+    async def test_include_url(self):
         r = await self.client.get('/test/child')
         self.assertEqual(
             r.status_code,
@@ -130,11 +167,11 @@ class TestUrl(TestCase):
         )
         self.assertEqual(
             r.body,
-            'Hello from child!\n'
+            'Hello from child!'
         )
 
     @run_coroutine
-    async def testUrlParam(self):
+    async def test_url_param(self):
         r = await self.client.get('/test-url-param/Elephant')
         self.assertEqual(
             r.status_code,
@@ -142,11 +179,11 @@ class TestUrl(TestCase):
         )
         self.assertEqual(
             r.body,
-            'name is Elephant.\n'
+            'name is Elephant.'
         )
 
     @run_coroutine
-    async def testUrlData(self):
+    async def test_url_data(self):
         r = await self.client.get('/test-url-data')
         self.assertEqual(
             r.status_code,
@@ -154,189 +191,153 @@ class TestUrl(TestCase):
         )
         self.assertEqual(
             r.body,
-            'name is Elephant.\n'
+            'name is Elephant.'
         )
 
-    @run_coroutine
-    async def testResourceRetrive(self):
-        r = await self.client.get('/users/123')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = retrieve, pk = 123\n'
-        )
+
+class TestResource(TestCase):
+    def setUp(self):
+        self.app = app
+        self.client = TestClient(app)
 
     @run_coroutine
-    async def testResourceDestroy(self):
-        r = await self.client.delete('/users/123')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = destroy, pk = 123\n'
-        )
+    async def test_resource_retrive(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.get('/%s/123' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: retrieve 123' % name
+                )
 
     @run_coroutine
-    async def testResourceEdit(self):
-        r = await self.client.get('/users/123/edit')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = edit, pk = 123\n'
-        )
+    async def test_resource_destroy(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.delete('/%s/123' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: destroy 123' % name
+                )
 
     @run_coroutine
-    async def testResourceList(self):
-        r = await self.client.get('/users')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = list, pk = \n'
-        )
+    async def test_resource_edit(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.get('/%s/123/edit' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: edit 123' % name
+                )
 
     @run_coroutine
-    async def testResourceCreate(self):
-        r = await self.client.post('/users')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = create, pk = \n'
-        )
+    async def test_resource_list(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.get('/%s' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: list' % name
+                )
 
     @run_coroutine
-    async def testResourceNew(self):
-        r = await self.client.get('/users/new')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = new, pk = \n'
-        )
+    async def test_resource_create(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.post('/%s' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: create' % name
+                )
 
     @run_coroutine
-    async def testResourceActionNotFound(self):
-        r = await self.client.delete('/users')
-        self.assertEqual(
-            r.status_code,
-            404
-        )
+    async def test_resource_new(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.get('/%s/new' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: new' % name
+                )
 
     @run_coroutine
-    async def testGetUsersHot(self):
-        r = await self.client.get('/users/hot')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = hot, pk = \n'
-        )
+    async def test_resource_action_not_found(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.delete('/%s' % name)
+                self.assertEqual(
+                    r.status_code,
+                    404
+                )
 
     @run_coroutine
-    async def testPostUsersHotNotFound(self):
-        r = await self.client.post('/users/hot')
-        self.assertEqual(
-            r.status_code,
-            404
-        )
+    async def test_collection_action(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.get('/%s/foo' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: foo' % name
+                )
 
     @run_coroutine
-    async def testGetUserConnectNotFound(self):
-        r = await self.client.get('/users/123/connect')
-        self.assertEqual(
-            r.status_code,
-            404
-        )
+    async def test_collection_action_wrong_method_not_found(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.post('/%s/foo' % name)
+                self.assertEqual(
+                    r.status_code,
+                    404
+                )
 
     @run_coroutine
-    async def testPostUserConnect(self):
-        r = await self.client.post('/users/123/connect')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'action = connect, pk = 123\n'
-        )
+    async def test_detail_action(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.post('/%s/123/bar' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    '%s: bar 123' % name
+                )
 
     @run_coroutine
-    async def testGetArticleRetrieveSuccess(self):
-        r = await self.client.get('/articles/123')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'article retrieve 123\n'
-        )
-
-    @run_coroutine
-    async def testGetArticleListSuccess(self):
-        r = await self.client.get('/articles')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'article list\n'
-        )
-
-    @run_coroutine
-    async def testGetArticlesHot(self):
-        r = await self.client.get('/articles/hot')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'get hot articles\n'
-        )
-
-    @run_coroutine
-    async def testPostArticlesHotNotFound(self):
-        r = await self.client.post('/articles/hot')
-        self.assertEqual(
-            r.status_code,
-            404
-        )
-
-    @run_coroutine
-    async def testGetArticleConnectNotFound(self):
-        r = await self.client.get('/articles/123/vote')
-        self.assertEqual(
-            r.status_code,
-            404
-        )
-
-    @run_coroutine
-    async def testPostArticleConnect(self):
-        r = await self.client.post('/articles/123/vote')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'vote article 123\n'
-        )
+    async def test_detail_action_wrong_method_not_found(self):
+        for name in ('items', 'users', 'articles'):
+            with self.subTest(name=name):
+                r = await self.client.get('/%s/123/bar' % name)
+                self.assertEqual(
+                    r.status_code,
+                    404
+                )

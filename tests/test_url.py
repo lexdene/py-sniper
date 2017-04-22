@@ -78,14 +78,21 @@ class ArticleCtrl(Controller):
         return Response('articles: bar %s' % self.kwargs['pk'])
 
 
-sub_urls = [
+sub_urls_1 = [
     url(r'^/child$', TestChildCtrl),
+]
+
+sub_urls_2 = [
+    url(r'^/foo$', data={'name': 'foo'}),
+    url(r'^/bar$', data={'name': 'bar'}),
+    url(r'^/baz$', test),
 ]
 
 urls = [
     url(r'^/test$', test),
     url(r'^/test/post-only$', TestPostOnlyCtrl, method='POST'),
-    url(r'^/test', include(sub_urls)),
+    include(r'^/test', sub_urls_1),
+    include(r'^/test-name', sub_urls_2, controller=test_url_param),
     url(r'^/test-url-param/(?P<name>\w+)$', test_url_param),
     url(r'^/test-url-data$', test_url_param, data={'name': 'Elephant'}),
     resource(
@@ -159,18 +166,6 @@ class TestUrl(TestCase):
         )
 
     @run_coroutine
-    async def test_include_url(self):
-        r = await self.client.get('/test/child')
-        self.assertEqual(
-            r.status_code,
-            200
-        )
-        self.assertEqual(
-            r.body,
-            'Hello from child!'
-        )
-
-    @run_coroutine
     async def test_url_param(self):
         r = await self.client.get('/test-url-param/Elephant')
         self.assertEqual(
@@ -195,13 +190,57 @@ class TestUrl(TestCase):
         )
 
 
+class TestInclude(TestCase):
+    def setUp(self):
+        self.app = app
+        self.client = TestClient(app)
+
+    @run_coroutine
+    async def test_include_url(self):
+        r = await self.client.get('/test/child')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'Hello from child!'
+        )
+
+    @run_coroutine
+    async def test_include_url_with_controller(self):
+        for name in ('foo', 'bar'):
+            with self.subTest(name=name):
+                r = await self.client.get('/test-name/%s' % name)
+                self.assertEqual(
+                    r.status_code,
+                    200
+                )
+                self.assertEqual(
+                    r.body,
+                    'name is %s.' % name
+                )
+
+    @run_coroutine
+    async def test_include_url_with_inner_controller(self):
+        r = await self.client.get('/test-name/baz')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'Hello world!'
+        )
+
+
 class TestResource(TestCase):
     def setUp(self):
         self.app = app
         self.client = TestClient(app)
 
     @run_coroutine
-    async def test_resource_retrive(self):
+    async def test_resource_retrieve(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
                 r = await self.client.get('/%s/123' % name)

@@ -36,28 +36,29 @@ class UrlResolver(BaseUrlResolver):
             else:
                 kwargs = match.kwargs
 
-            if self.controller:
-                return ResolveResult(
-                    controller=self.controller,
-                    argv=match.argv,
-                    kwargs=kwargs,
-                )
-            elif self.children:
+            if self.children:
                 new_params = merge_dict(params, match.new_params)
 
                 for resolver in self.children:
                     child_match = resolver.match(new_params)
                     if child_match:
+                        if child_match.controller:
+                            controller = child_match.controller
+                        else:
+                            controller = self.controller
+
                         return ResolveResult(
-                            controller=child_match.controller,
+                            controller=controller,
                             argv=match.argv + child_match.argv,
                             kwargs=merge_dict(kwargs, child_match.kwargs)
                         )
-
-
-def include(children):
-    # todo: support namespace
-    return tuple(children)
+            else:
+                # if no children match
+                return ResolveResult(
+                    controller=self.controller,
+                    argv=match.argv,
+                    kwargs=kwargs,
+                )
 
 
 def resolver(pattern, controller, data):
@@ -77,14 +78,23 @@ def resolver(pattern, controller, data):
         )
 
 
-def url(regexp, controller, method=None, data=None):
+def include(regexp, children, controller=None, data=None):
+    return UrlResolver(
+        pattern=patterns.PathRegexpPattern(regexp),
+        controller=controller,
+        children=children,
+        data=data
+    )
+
+
+def url(regexp, controller=None, method=None, data=None):
     if method:
-        return url(regexp, include([verb(method, controller, data=data)]))
+        return include(regexp, [verb(method, controller, data=data)])
 
     return resolver(patterns.PathRegexpPattern(regexp), controller, data=data)
 
 
-def verb(method, controller, data=None):
+def verb(method, controller=None, data=None):
     return resolver(patterns.MethodPattern(method), controller, data=data)
 
 
@@ -141,7 +151,6 @@ def resource(name, controller, actions=[], children=[]):
 
         _url = url(
             regexp,
-            controller,
             method=action.method,
             data={'action': action.action}
         )
@@ -152,16 +161,17 @@ def resource(name, controller, actions=[], children=[]):
             detail_action_urls.append(_url)
 
     base_path = '/' + name
-    return url(
+    return include(
         r'^/' + name,
-        include([
+        [
             # list actions
             *list_action_urls,
             # detail actions
-            url(
+            include(
                 r'^/(?P<pk>\w+)',
-                include(detail_action_urls)
+                detail_action_urls
             ),
-        ]),
+        ],
+        controller=controller,
         data={'resource_base_path': base_path}
     )

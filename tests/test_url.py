@@ -1,6 +1,6 @@
 from sniper.controllers import BaseController, Controller
 from sniper.responses import Response
-from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
+from sniper.tests import TestApp, TestCase, TestClient
 from sniper.url import collection, detail, include, resource, url
 
 
@@ -129,7 +129,6 @@ class TestUrl(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_simple_get(self):
         r = await self.client.get('/test')
         self.assertEqual(
@@ -141,7 +140,6 @@ class TestUrl(TestCase):
             'Hello world!'
         )
 
-    @run_coroutine
     async def test_not_found(self):
         r = await self.client.get('/test/xxx')
         self.assertEqual(
@@ -149,7 +147,6 @@ class TestUrl(TestCase):
             404
         )
 
-    @run_coroutine
     async def test_post_post_only_success(self):
         r = await self.client.post('/test/post-only')
         self.assertEqual(
@@ -157,7 +154,6 @@ class TestUrl(TestCase):
             200
         )
 
-    @run_coroutine
     async def test_get_post_only_not_found(self):
         r = await self.client.get('/test/post-only')
         self.assertEqual(
@@ -165,7 +161,6 @@ class TestUrl(TestCase):
             404
         )
 
-    @run_coroutine
     async def test_url_param(self):
         r = await self.client.get('/test-url-param/Elephant')
         self.assertEqual(
@@ -177,7 +172,6 @@ class TestUrl(TestCase):
             'name is Elephant.'
         )
 
-    @run_coroutine
     async def test_url_data(self):
         r = await self.client.get('/test-url-data')
         self.assertEqual(
@@ -195,7 +189,6 @@ class TestInclude(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_include_url(self):
         r = await self.client.get('/test/child')
         self.assertEqual(
@@ -207,7 +200,6 @@ class TestInclude(TestCase):
             'Hello from child!'
         )
 
-    @run_coroutine
     async def test_include_url_with_controller(self):
         for name in ('foo', 'bar'):
             with self.subTest(name=name):
@@ -221,7 +213,6 @@ class TestInclude(TestCase):
                     'name is %s.' % name
                 )
 
-    @run_coroutine
     async def test_include_url_with_inner_controller(self):
         r = await self.client.get('/test-name/baz')
         self.assertEqual(
@@ -239,7 +230,6 @@ class TestResource(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_resource_retrieve(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -253,7 +243,6 @@ class TestResource(TestCase):
                     '%s: retrieve 123' % name
                 )
 
-    @run_coroutine
     async def test_resource_destroy(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -267,7 +256,6 @@ class TestResource(TestCase):
                     '%s: destroy 123' % name
                 )
 
-    @run_coroutine
     async def test_resource_edit(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -281,7 +269,6 @@ class TestResource(TestCase):
                     '%s: edit 123' % name
                 )
 
-    @run_coroutine
     async def test_resource_list(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -295,7 +282,6 @@ class TestResource(TestCase):
                     '%s: list' % name
                 )
 
-    @run_coroutine
     async def test_resource_create(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -309,7 +295,6 @@ class TestResource(TestCase):
                     '%s: create' % name
                 )
 
-    @run_coroutine
     async def test_resource_new(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -323,7 +308,6 @@ class TestResource(TestCase):
                     '%s: new' % name
                 )
 
-    @run_coroutine
     async def test_resource_action_not_found(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -333,7 +317,6 @@ class TestResource(TestCase):
                     404
                 )
 
-    @run_coroutine
     async def test_collection_action(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -347,7 +330,6 @@ class TestResource(TestCase):
                     '%s: foo' % name
                 )
 
-    @run_coroutine
     async def test_collection_action_wrong_method_not_found(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -357,7 +339,6 @@ class TestResource(TestCase):
                     404
                 )
 
-    @run_coroutine
     async def test_detail_action(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):
@@ -371,7 +352,6 @@ class TestResource(TestCase):
                     '%s: bar 123' % name
                 )
 
-    @run_coroutine
     async def test_detail_action_wrong_method_not_found(self):
         for name in ('items', 'users', 'articles'):
             with self.subTest(name=name):

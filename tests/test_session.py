@@ -1,6 +1,6 @@
 from sniper.controllers import Controller
 from sniper.responses import Response
-from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
+from sniper.tests import TestApp, TestCase, TestClient
 from sniper.url import url
 
 
@@ -40,7 +40,6 @@ class TestSession(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_set_name(self):
         r1 = await self.client.get('/get-name')
         self.assertEqual(r1.status_code, 200)

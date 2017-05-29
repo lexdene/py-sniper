@@ -1,5 +1,5 @@
 from sniper.responses import Response
-from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
+from sniper.tests import TestApp, TestCase, TestClient
 from sniper.url import url
 
 
@@ -60,7 +60,6 @@ class TestHeaders(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_query(self):
         r = await self.client.get('/test-query?name=Jack')
         self.assertEqual(
@@ -72,7 +71,6 @@ class TestHeaders(TestCase):
             'name = Jack\n'
         )
 
-    @run_coroutine
     async def test_header(self):
         r = await self.client.get(
             '/test-header',
@@ -89,7 +87,6 @@ class TestHeaders(TestCase):
             'X-Name = Joe\n'
         )
 
-    @run_coroutine
     async def test_cookie(self):
         r = await self.client.get(
             '/test-cookie',
@@ -106,7 +103,6 @@ class TestHeaders(TestCase):
             'name in cookie = Jane\n'
         )
 
-    @run_coroutine
     async def test_set_header(self):
         r = await self.client.get(
             '/test-set-header'
@@ -120,7 +116,6 @@ class TestHeaders(TestCase):
             'Elephant'
         )
 
-    @run_coroutine
     async def test_set_cookie(self):
         r = await self.client.get(
             '/test-set-cookie'
@@ -134,7 +129,6 @@ class TestHeaders(TestCase):
             'name=Elephant'
         )
 
-    @run_coroutine
     async def test_set_cookie_to_response(self):
         r = await self.client.get(
             '/test-set-cookie-to-response'

@@ -1,7 +1,7 @@
 import json
 
 from sniper.responses import Response
-from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
+from sniper.tests import TestApp, TestCase, TestClient
 from sniper.url import url
 
 
@@ -21,7 +21,6 @@ class TestRequestData(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_json_data(self):
         r = await self.client.post(
             '/test-name-from-data',
@@ -41,7 +40,6 @@ class TestRequestData(TestCase):
             'name = Thomas\n'
         )
 
-    @run_coroutine
     async def test_urlencoded(self):
         r = await self.client.post(
             '/test-name-from-data',

@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 from functools import wraps
 from urllib.parse import urlencode
@@ -61,13 +62,18 @@ class TestApp(BaseApp):
 
 
 class TestCase(unittest.TestCase):
-    pass
+    def __getattribute__(self, name):
+        attr = super(TestCase, self).__getattribute__(name)
+        if asyncio.iscoroutinefunction(attr):
+            return _run_coroutine(self, attr)
+        else:
+            return attr
 
 
-def run_coroutine(f):
+def _run_coroutine(self, f):
 
     @wraps(f)
-    def wrapper(self, *args, **kwargs):
-        future = f(self, *args, **kwargs)
+    def wrapper(*args, **kwargs):
+        future = f(*args, **kwargs)
         self.app.loop.run_until_complete(future)
     return wrapper

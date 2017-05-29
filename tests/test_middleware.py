@@ -1,7 +1,7 @@
 from sniper.controllers import Controller
 from sniper.exceptions import BadRequest
 from sniper.responses import Response
-from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
+from sniper.tests import TestApp, TestCase, TestClient
 from sniper.url import url
 
 
@@ -28,7 +28,6 @@ class TestMiddleware(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def test_hello(self):
         r = await self.client.get('/hello')
         self.assertEqual(
@@ -40,7 +39,6 @@ class TestMiddleware(TestCase):
             'hello\n'
         )
 
-    @run_coroutine
     async def test_bad_request(self):
         r = await self.client.get('/bad-request')
         self.assertEqual(

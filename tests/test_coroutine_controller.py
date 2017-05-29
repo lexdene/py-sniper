@@ -1,6 +1,6 @@
 from sniper.controllers import BaseController, Controller
 from sniper.responses import Response
-from sniper.tests import TestApp, TestCase, TestClient, run_coroutine
+from sniper.tests import TestApp, TestCase, TestClient
 from sniper.url import resource, url
 
 
@@ -53,7 +53,6 @@ class TestCoroutineController(TestCase):
         self.app = app
         self.client = TestClient(app)
 
-    @run_coroutine
     async def testSimpleCoroutineFunction(self):
         result = await simple_coroutine_function(
             self.app.loop,
@@ -64,7 +63,6 @@ class TestCoroutineController(TestCase):
             'HELLO'
         )
 
-    @run_coroutine
     async def testCoroutineControllerFunction(self):
         r = await self.client.get('/test')
         self.assertEqual(
@@ -76,7 +74,6 @@ class TestCoroutineController(TestCase):
             'data is HELLO TEST\n'
         )
 
-    @run_coroutine
     async def testCoroutineController(self):
         r = await self.client.get('/test-controller')
         self.assertEqual(
@@ -88,7 +85,6 @@ class TestCoroutineController(TestCase):
             'data is HELLO RUN\n'
         )
 
-    @run_coroutine
     async def testCoroutineResource(self):
         r = await self.client.get('/articles/xxx')
         self.assertEqual(

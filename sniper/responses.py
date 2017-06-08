@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 
-from .utils import QueryList
+from .utils import QueryList, is_async_generator
 
 
 DEFAULT_CONTENT_TYPE = 'text/plain'
@@ -12,8 +12,10 @@ class BaseResponse:
     def __init__(self, body, headers,
                  status_code, status_phrase, cookies=None,
                  content_type=None, charset=None):
-        assert isinstance(body, (str, bytes)), (
-            'body must be str or bytes'
+        assert is_async_generator(body) or isinstance(body, (str, bytes)), (
+            'body must be str or bytes or async generator, got: %s' % (
+                type(body),
+            )
         )
         assert isinstance(headers, QueryList), (
             'header must be a QueryList object'
@@ -53,7 +55,7 @@ class BaseResponse:
 
 
 class Response(BaseResponse):
-    def __init__(self, body, headers=None,
+    def __init__(self, body='', headers=None,
                  status_code=200, status_phrase=None, cookies=None,
                  **kwargs):
         headers = QueryList(headers or [])

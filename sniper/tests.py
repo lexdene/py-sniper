@@ -38,6 +38,7 @@ class TestClient:
 
         request = Request(
             app=self.app,
+            reader=None,
             method=method.upper(),
             uri=path,
             headers=headers,

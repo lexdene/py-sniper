@@ -3,6 +3,17 @@ import string
 import urllib.parse
 
 
+def is_async_generator(obj):
+    attrs = [
+        '__aiter__',
+        '__anext__',
+    ]
+    return all(
+        hasattr(obj, key)
+        for key in attrs
+    )
+
+
 def cached_property(func):
     return _CachedProperty(func)
 

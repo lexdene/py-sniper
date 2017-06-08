@@ -7,8 +7,9 @@ from .utils import QueryList, cached_property
 
 
 class Request:
-    def __init__(self, app, method, uri, headers=None, body=None):
+    def __init__(self, app, reader, method, uri, headers=None, body=None):
         self.app = app
+        self.reader = reader
         self.method = method.upper()
         self.raw_uri = uri
         self.headers = QueryList(headers or [])

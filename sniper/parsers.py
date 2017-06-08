@@ -66,7 +66,7 @@ class HttpParser(BaseParser):
             headers=headers,
             body=body,
         )
-        request = self.build_request(request)
+        request = self.build_request(request, reader)
 
         return request
 
@@ -100,7 +100,7 @@ class HttpParser(BaseParser):
         else:
             raise ParseError('can not parse start line', start_line)
 
-    def build_request(self, raw_request):
+    def build_request(self, raw_request, reader):
         '''
             build a requests.Request object.
             everything in raw_request are bytes.
@@ -122,6 +122,7 @@ class HttpParser(BaseParser):
             app=self.app,
             headers=headers,
             body=raw_request.body,
+            reader=reader,
             **kwargs
         )
 
@@ -134,8 +135,10 @@ class HttpParser(BaseParser):
         if isinstance(body, str):
             body = body.encode(response.charset)
 
+        content_length = len(body) if isinstance(body, bytes) else 0
+
         headers = [
-            ('Content-Length', str(len(body))),
+            ('Content-Length', str(content_length)),
         ]
 
         return _RawHttpResponse(
@@ -168,5 +171,10 @@ class HttpParser(BaseParser):
         await self._write_http_line_to_writer(writer, b'')
         await writer.drain()
 
-        writer.write(response.body)
-        await writer.drain()
+        if isinstance(response.body, bytes):
+            writer.write(response.body)
+            await writer.drain()
+        else:
+            async for data in response.body:
+                writer.write(data)
+                await writer.drain()

@@ -1,7 +1,6 @@
 import re
 from collections import namedtuple
 
-
 PatternMatchResult = namedtuple(
     'PatternMatchResult',
     ['argv', 'kwargs', 'new_params'],

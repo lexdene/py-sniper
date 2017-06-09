@@ -3,7 +3,6 @@ from http.cookies import SimpleCookie
 
 from .utils import QueryList, is_async_generator
 
-
 DEFAULT_CONTENT_TYPE = 'text/plain'
 DEFAULT_CHARSET = 'utf-8'
 

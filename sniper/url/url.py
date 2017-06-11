@@ -175,3 +175,13 @@ def resource(name, controller, actions=[], children=[]):
         controller=controller,
         data={'resource_base_path': base_path}
     )
+
+
+def method_actions(methods=None):
+    if methods is None:
+        methods = ['GET', 'POST']
+
+    return [
+        verb(m, data={'action': m.lower()})
+        for m in methods
+    ]

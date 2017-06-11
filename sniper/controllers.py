@@ -71,3 +71,11 @@ class JsonResponseMixin:
 
 class JsonController(JsonResponseMixin, Controller):
     pass
+
+
+class MethodActionsMixin:
+    def get(self):
+        return self.handle()
+
+    def post(self):
+        return self.handle()

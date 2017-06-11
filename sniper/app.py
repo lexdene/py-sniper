@@ -11,7 +11,8 @@ logger = logging.getLogger('sniper.application')
 class BaseApp:
     def __init__(self, urls=[], config=None,
                  session_cls=None, session_store=None,
-                 parser_class=None):
+                 parser_class=None,
+                 startups=[]):
         self.urls = urls
         self.config = config
 
@@ -20,6 +21,8 @@ class BaseApp:
 
         self.parser_class = parser_class or HttpParser
         self._parser = None
+
+        self.startups = startups
 
         self.next_connection_id = 0
 
@@ -86,7 +89,7 @@ class BaseApp:
 
 class Application(BaseApp):
     def run(self, *argv, **kwargs):
-        self.loop.run_until_complete(self.startup(*argv, **kwargs))
+        self.loop.create_task(self.startup(*argv, **kwargs))
 
         try:
             self.loop.run_forever()
@@ -110,6 +113,9 @@ class Application(BaseApp):
             logger.info('server %s started on unix path %s' % (s, socket_path))
         else:
             raise ValueError('one of port and socket_path must be provided.')
+
+        for startup in self.startups:
+            await startup(self.loop, self)
 
     async def _client_connected(self, reader, writer):
         connection_id = self.next_connection_id

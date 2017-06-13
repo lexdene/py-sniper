@@ -99,19 +99,19 @@ class Application(BaseApp):
 
     async def startup(self, port=None, socket_path=None):
         if port:
-            s = await asyncio.start_server(
+            await asyncio.start_server(
                 self._client_connected,
                 port=port,
                 loop=self.loop,
             )
-            logger.info('server %s started on port %s' % (s, port))
+            logger.info('server started on port %s' % (port,))
         elif socket_path:
-            s = await asyncio.start_unix_server(
+            await asyncio.start_unix_server(
                 self._client_connected,
                 path=socket_path,
                 loop=self.loop,
             )
-            logger.info('server %s started on unix path %s' % (s, socket_path))
+            logger.info('server started on unix path %s' % (socket_path,))
         else:
             raise ValueError('one of port and socket_path must be provided.')
 

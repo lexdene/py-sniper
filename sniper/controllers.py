@@ -1,6 +1,8 @@
+import asyncio
 import json
 
 from . import middlewares
+from .exceptions import MethodNotAllowed
 from .responses import Response
 from .sessions import session_middleware
 
@@ -21,28 +23,50 @@ class Controller(BaseController):
     MIDDLEWARES = [
         middlewares.catch_http_errors,
         session_middleware,
-        middlewares.ret_to_response,
-        middlewares.handler_by_action,
     ]
     _middleware_entry = None   # lazy build
-
-    def __init__(self, *argv, **kwargs):
-        super().__init__(*argv, **kwargs)
-
-        self.action = self.kwargs.get('action', 'handle')
 
     async def run(self):
         handler = self._get_middleware_entry()
         return await handler(self)
 
+    async def inner_run(self):
+        action = self.kwargs.get('action')
+
+        if action:
+            try:
+                handler = getattr(self, action)
+            except AttributeError:
+                raise MethodNotAllowed()
+        else:
+            handler = self.handle
+
+        result = handler()
+
+        if asyncio.iscoroutine(result):
+            result = await result
+
+        if not isinstance(result, Response):
+            result = self.process_return_data(result)
+            result = self.create_response(result)
+
+        return result
+
+    def process_return_data(self, ret):
+        return ret
+
     def create_response(self, ret):
-        return Response(ret)
+        return self.response_class(ret)
+
+    @classmethod
+    def get_middlewares(cls):
+        return cls.MIDDLEWARES
 
     @classmethod
     def _get_middleware_entry(cls):
         if cls._middleware_entry is None:
             cls._middleware_entry = middlewares.build_entry(
-                cls.MIDDLEWARES
+                cls.get_middlewares()
             )
 
         return cls._middleware_entry

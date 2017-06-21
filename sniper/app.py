@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 from .controllers import BaseController, NotFoundController
 from .parsers import HttpParser, ParseError
@@ -36,8 +37,12 @@ class BaseApp:
         return self._parser
 
     async def process_request(self, request):
+        begin_time = time.time()
+        connection_id = getattr(request, 'connection_id', 0)
+
         logger.info(
-            'BEGIN %s %s',
+            '%d BEGIN %s %s',
+            connection_id,
             request.method,
             request.raw_uri,
         )
@@ -48,11 +53,15 @@ class BaseApp:
             logger.exception(e)
             response = self._build_response_for_exception(request, e)
 
+        end_time = time.time()
+        elapsed_time = end_time - begin_time
         logger.info(
-            '%s %s %d',
+            '%d %s %s %d %.2fms',
+            connection_id,
             request.method,
             request.raw_uri,
-            response.status_code
+            response.status_code,
+            elapsed_time * 1000
         )
         return response
 
@@ -139,6 +148,7 @@ class Application(BaseApp):
 
             try:
                 request = await self.parser.read_request(reader)
+                request.connection_id = connection_id
                 resp = await self.process_request(request)
                 await self.parser.write_response(writer, resp)
             except asyncio.IncompleteReadError:

@@ -40,6 +40,7 @@ class TestSession(TestCase):
         self.app = app
         self.client = TestClient(app)
 
+    # TODO: add test for expire
     async def test_set_name(self):
         r1 = await self.client.get('/get-name')
         self.assertEqual(r1.status_code, 200)

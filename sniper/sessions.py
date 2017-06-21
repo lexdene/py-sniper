@@ -7,63 +7,73 @@ class BaseSession:
     COOKIE_NAME = 'sessionid'
     EXPIRE_DAYS = 7
 
-    def __init__(self, key):
-        self.key = key
+    def __init__(self, request, store):
+        self.request = request
+        self.store = store
+
         self._data = None
-
+        self._key = None
         self._edited = False
-        self._new = True
+        self._is_new = True
 
-    def is_valid(self, request):
+    def is_data_valid(self, data):
         return True
 
+    @property
+    def data(self):
+        if self._data is None:
+            self._data, self._key, self._is_new = self._load_session()
+
+        return self._data
+
     def get(self, key, default=None):
-        return self._data.get(key, default)
+        return self.data.get(key, default)
 
     def set(self, key, value):
-        self._data[key] = value
+        self.data[key] = value
         self._edited = True
 
-    def load_data(self, data):
-        self._data = data
-        self._new = False
+    def _load_session(self):
+        'return (data, session_key, is_new)'
+        cookie_name = self.get_cookie_name()
+        session_key = self.request.cookie.get(cookie_name, None)
 
-    def init_data(self, request):
-        self._data = {}
-        self._new = True
+        if session_key:
+            data = self.get_by_key(session_key)
+            if data and self.is_data_valid(data):
+                return data, session_key, False
 
-    def save(self, store):
-        if not self._edited:
-            return
+        return {}, None, True
 
-        if self._new:
-            store.create(
-                key=self.key,
-                data=self._data,
-                expire_at=datetime.datetime.now() + self.get_expire_length()
-            )
-        else:
-            store.update(
-                key=self.key,
-                data=self._data,
-                expire_at=datetime.datetime.now() + self.get_expire_length()
-            )
+    def get_by_key(self, key):
+        data = self.store.get(key)
+        if data and data['expire_at'] > datetime.datetime.now() \
+                and data['key'] == key:
+            return data['data']
 
-    @classmethod
-    def get_by_key(cls, key, store):
-        data = store.get(key)
-        if data:
-            if data['expire_at'] > datetime.datetime.now():
-                s = cls(key)
-                s.load_data(data['data'])
-                return s
+    def flush(self, response):
+        if self._edited:
+            cookie_name = self.get_cookie_name()
+            session_key = self.request.cookie.get(cookie_name, None)
+            if self._key is None:
+                self._key = random_string(length=32)
 
-    @classmethod
-    def create(cls, request):
-        key = random_string(length=32)
-        s = cls(key)
-        s.init_data(request)
-        return s
+            if self._key != session_key:
+                response.cookies[cookie_name] = self._key
+
+            expire_at = datetime.datetime.now() + self.get_expire_length()
+            if self._is_new:
+                self.store.create(
+                    key=self._key,
+                    data=self._data,
+                    expire_at=expire_at,
+                )
+            else:
+                self.store.update(
+                    key=self._key,
+                    data=self._data,
+                    expire_at=expire_at,
+                )
 
     @classmethod
     def get_cookie_name(cls):
@@ -125,23 +135,9 @@ async def session_middleware(controller, get_response):
 
     session_cls = app.session_cls
     store = app.session_store
-    cookie_name = session_cls.get_cookie_name()
 
-    session_key = request.cookie.get(cookie_name, None)
-    if session_key:
-        session = session_cls.get_by_key(session_key, store)
-    else:
-        session = None
-
-    if session is None or not session.is_valid(controller.request):
-        session = session_cls.create(request)
-
-    request.session = session
+    request.session = session_cls(request, store)
     response = await get_response(controller)
-
-    if session.key != session_key and session._edited:
-        response.cookies[cookie_name] = session.key
-
-    session.save(store)
+    request.session.flush(response)
 
     return response

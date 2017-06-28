@@ -66,9 +66,9 @@ class BaseApp:
         return response
 
     async def get_response(self, request):
-        find_result = self.find_controller(request)
-        if find_result:
-            controller_func, argv, kwargs = find_result
+        result = self.resolve_request(request)
+        if result:
+            controller_func, argv, kwargs = result
         else:
             controller_func = NotFoundController
             argv = []
@@ -83,11 +83,12 @@ class BaseApp:
 
         return result
 
-    def find_controller(self, request):
+    def resolve_request(self, request):
+        params = {'request': request}
         for url in self.urls:
-            match = url.match({'request': request})
-            if match:
-                return match
+            result = url.resolve(params.copy())
+            if result:
+                return result
 
     def _build_response_for_exception(self, request, exception):
         return Response(

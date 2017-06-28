@@ -1,30 +1,43 @@
 import re
 from collections import namedtuple
 
-PatternMatchResult = namedtuple(
-    'PatternMatchResult',
-    ['argv', 'kwargs', 'new_params'],
+PatternResolveResult = namedtuple(
+    'PatternResolveResult',
+    ['argv', 'kwargs'],
 )
 
 
 class BasePattern:
+    def resolve(self, params):
+        '''
+            test if current pattern can resolve params
+
+            if can resolve, return a PatternResolveResult object.
+            otherwise, return None.
+
+            :param dict params: params during resolve
+        '''
+        if self.match(params):
+            return PatternResolveResult(
+                argv=(),
+                kwargs={},
+            )
+
     def match(self, params):
         '''
-            test if current pattern match params
+            test if current pattern can match params.
 
-            if not match, return None.
-            if match, return a PatternMatchResult object.
-
-            :param dict params: params during match
+            return boolean.
         '''
-        pass
+        return False
 
 
 class PathRegexpPattern(BasePattern):
     def __init__(self, regexp):
         self.regexp = re.compile(regexp)
 
-    def match(self, params):
+    def resolve(self, params):
+        # params['path'] should be the tail part of previous pattern
         if 'path' in params:
             path = params['path']
         else:
@@ -38,14 +51,12 @@ class PathRegexpPattern(BasePattern):
             if not kwargs:
                 argv = match.groups()
 
-            new_params = dict(
-                path=path[match.end():],
-            )
+            # path is the tail part for next pattern
+            params['path'] = path[match.end():]
 
-            return PatternMatchResult(
+            return PatternResolveResult(
                 argv=argv,
                 kwargs=kwargs,
-                new_params=new_params
             )
 
 
@@ -56,9 +67,4 @@ class MethodPattern(BasePattern):
     def match(self, params):
         request = params['request']
 
-        if request.method == self.method:
-            return PatternMatchResult(
-                argv=(),
-                kwargs={},
-                new_params={},
-            )
+        return request.method == self.method

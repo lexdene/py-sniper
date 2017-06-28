@@ -12,52 +12,40 @@ ResolveResult = namedtuple(
 )
 
 
-class BaseUrlResolver:
+class UrlResolver:
     def __init__(self, pattern, controller=None, children=None, data=None):
         self.pattern = pattern
         self.controller = controller
         self.children = children
-        self.data = data
+        self.data = data or {}
 
-    def match(self, params):
-        '''
-        if not match, return None.
-        if match, return a (controller_class, argv, kwargs) tuple
-        '''
-        pass
+    def resolve(self, params):
+        pattern_resolve_result = self.pattern.resolve(params)
+        if not pattern_resolve_result:
+            return
 
+        kwargs = merge_dict(pattern_resolve_result.kwargs, self.data)
 
-class UrlResolver(BaseUrlResolver):
-    def match(self, params):
-        match = self.pattern.match(params)
-        if match:
-            if self.data:
-                kwargs = merge_dict(match.kwargs, self.data)
-            else:
-                kwargs = match.kwargs
+        if not self.children:
+            return ResolveResult(
+                controller=self.controller,
+                argv=pattern_resolve_result.argv,
+                kwargs=kwargs,
+            )
 
-            if self.children:
-                new_params = merge_dict(params, match.new_params)
+        for child in self.children:
+            new_params = params.copy()
+            child_result = child.resolve(new_params)
+            if child_result:
+                if child_result.controller:
+                    controller = child_result.controller
+                else:
+                    controller = self.controller
 
-                for resolver in self.children:
-                    child_match = resolver.match(new_params)
-                    if child_match:
-                        if child_match.controller:
-                            controller = child_match.controller
-                        else:
-                            controller = self.controller
-
-                        return ResolveResult(
-                            controller=controller,
-                            argv=match.argv + child_match.argv,
-                            kwargs=merge_dict(kwargs, child_match.kwargs)
-                        )
-            else:
-                # if no children match
                 return ResolveResult(
-                    controller=self.controller,
-                    argv=match.argv,
-                    kwargs=kwargs,
+                    controller=controller,
+                    argv=pattern_resolve_result.argv + child_result.argv,
+                    kwargs=merge_dict(kwargs, child_result.kwargs)
                 )
 
 

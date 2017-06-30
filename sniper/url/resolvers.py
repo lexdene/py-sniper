@@ -56,17 +56,17 @@ class UrlResolver:
                 )
 
 
-def resolver(pattern, controller, data):
+def resolver(patterns, controller, data):
     if isinstance(controller, (tuple, list)):
         return UrlResolver(
-            pattern=pattern,
+            patterns=patterns,
             controller=None,
             children=controller,
             data=data,
         )
     else:
         return UrlResolver(
-            pattern=pattern,
+            patterns=patterns,
             controller=controller,
             children=None,
             data=data,
@@ -82,15 +82,26 @@ def include(regexp, children, controller=None, data=None):
     )
 
 
-def url(regexp, controller=None, method=None, data=None):
-    if method:
-        return include(regexp, [verb(method, controller, data=data)])
+def url(regexp=None, controller=None, method=None, data=None):
+    patterns = []
+    if regexp:
+        patterns.append(PathRegexpPattern(regexp))
 
-    return resolver(PathRegexpPattern(regexp), controller, data=data)
+    if method:
+        patterns.append(MethodPattern(method))
+
+    if not patterns:
+        raise ValueError('regexp or method must be provided')
+
+    return resolver(
+        patterns=patterns,
+        controller=controller,
+        data=data,
+    )
 
 
 def verb(method, controller=None, data=None):
-    return resolver(MethodPattern(method), controller, data=data)
+    return resolver([MethodPattern(method)], controller, data=data)
 
 
 def _build_default_actions():

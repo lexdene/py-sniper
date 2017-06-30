@@ -86,7 +86,7 @@ class BaseApp:
     def resolve_request(self, request):
         params = {'request': request}
         for url in self.urls:
-            result = url.resolve(params.copy())
+            result = url.resolve(params)
             if result:
                 return result
 

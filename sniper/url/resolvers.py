@@ -19,6 +19,8 @@ class UrlResolver:
         self.data = data or {}
 
     def resolve(self, params):
+        params = params.copy()
+
         pattern_resolve_result = self.pattern.resolve(params)
         if not pattern_resolve_result:
             return
@@ -33,8 +35,7 @@ class UrlResolver:
             )
 
         for child in self.children:
-            new_params = params.copy()
-            child_result = child.resolve(new_params)
+            child_result = child.resolve(params)
             if child_result:
                 if child_result.controller:
                     controller = child_result.controller

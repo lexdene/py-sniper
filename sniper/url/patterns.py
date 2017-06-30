@@ -68,3 +68,21 @@ class MethodPattern(BasePattern):
         request = params['request']
 
         return request.method == self.method
+
+
+def resolve_patterns(pattern_list, params):
+    argv = []
+    kwargs = {}
+
+    for pattern in pattern_list:
+        result = pattern.resolve(params)
+        if not result:
+            return
+
+        argv += result.argv
+        kwargs.update(result.kwargs)
+
+    return PatternResolveResult(
+        argv=argv,
+        kwargs=kwargs,
+    )

@@ -1,9 +1,9 @@
 from collections import namedtuple
 from itertools import chain
 
-from . import patterns
 from ..utils import merge_dict
 from .actions import Action, ActionType
+from .patterns import MethodPattern, PathRegexpPattern, resolve_patterns
 
 ResolveResult = namedtuple(
     'ResolveResult',
@@ -12,8 +12,15 @@ ResolveResult = namedtuple(
 
 
 class UrlResolver:
-    def __init__(self, pattern, controller=None, children=None, data=None):
-        self.pattern = pattern
+    def __init__(self, pattern=None, controller=None, children=None,
+                 data=None, patterns=None):
+        if pattern:
+            self.patterns = [pattern]
+        elif patterns:
+            self.patterns = patterns
+        else:
+            raise ValueError('no pattern is provided')
+
         self.controller = controller
         self.children = children
         self.data = data or {}
@@ -21,7 +28,7 @@ class UrlResolver:
     def resolve(self, params):
         params = params.copy()
 
-        pattern_resolve_result = self.pattern.resolve(params)
+        pattern_resolve_result = resolve_patterns(self.patterns, params)
         if not pattern_resolve_result:
             return
 
@@ -68,7 +75,7 @@ def resolver(pattern, controller, data):
 
 def include(regexp, children, controller=None, data=None):
     return UrlResolver(
-        pattern=patterns.PathRegexpPattern(regexp),
+        pattern=PathRegexpPattern(regexp),
         controller=controller,
         children=children,
         data=data
@@ -79,11 +86,11 @@ def url(regexp, controller=None, method=None, data=None):
     if method:
         return include(regexp, [verb(method, controller, data=data)])
 
-    return resolver(patterns.PathRegexpPattern(regexp), controller, data=data)
+    return resolver(PathRegexpPattern(regexp), controller, data=data)
 
 
 def verb(method, controller=None, data=None):
-    return resolver(patterns.MethodPattern(method), controller, data=data)
+    return resolver(MethodPattern(method), controller, data=data)
 
 
 def _build_default_actions():

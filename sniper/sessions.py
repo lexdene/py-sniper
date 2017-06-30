@@ -1,6 +1,13 @@
 import datetime
+from email.utils import format_datetime
 
 from .utils import random_string
+
+
+def now():
+    return datetime.datetime.now(
+        datetime.timezone.utc
+    )
 
 
 class BaseSession:
@@ -47,8 +54,8 @@ class BaseSession:
 
     def get_by_key(self, key):
         data = self.store.get(key)
-        if data and data['expire_at'] > datetime.datetime.now() \
-                and data['key'] == key:
+
+        if data and data['expire_at'] > now() and data['key'] == key:
             return data['data']
 
     def flush(self, response):
@@ -58,10 +65,15 @@ class BaseSession:
             if self._key is None:
                 self._key = random_string(length=32)
 
+            expire_at = now() + self.get_expire_length()
+
             if self._key != session_key:
                 response.cookies[cookie_name] = self._key
+                morsel = response.cookies[cookie_name]
+                morsel['expires'] = format_datetime(expire_at, usegmt=True)
+                morsel['path'] = '/'
+                morsel['httponly'] = True
 
-            expire_at = datetime.datetime.now() + self.get_expire_length()
             if self._is_new:
                 self.store.create(
                     key=self._key,

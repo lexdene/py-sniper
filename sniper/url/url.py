@@ -1,9 +1,8 @@
 from collections import namedtuple
 from itertools import chain
 
-from sniper.utils import merge_dict
-
 from . import patterns
+from ..utils import merge_dict
 from .actions import Action, ActionType
 
 ResolveResult = namedtuple(

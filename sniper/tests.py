@@ -1,5 +1,5 @@
-import asyncio
 import unittest
+from asyncio import iscoroutinefunction
 from functools import wraps
 from urllib.parse import urlencode
 
@@ -62,19 +62,23 @@ class TestApp(BaseApp):
     pass
 
 
-class TestCase(unittest.TestCase):
-    def __getattribute__(self, name):
-        attr = super(TestCase, self).__getattribute__(name)
-        if asyncio.iscoroutinefunction(attr):
-            return _run_coroutine(self, attr)
-        else:
-            return attr
+class WrapCoroutines(type):
+    def __new__(cls, name, bases, classdict):
+        for key, value in classdict.items():
+            if key.startswith('test') and iscoroutinefunction(value):
+                classdict[key] = _run_coroutine(value)
+
+        return type.__new__(cls, name, bases, classdict)
 
 
-def _run_coroutine(self, f):
+class TestCase(unittest.TestCase, metaclass=WrapCoroutines):
+    pass
 
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        future = f(*args, **kwargs)
+
+def _run_coroutine(func):
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        future = func(self, *args, **kwargs)
         self.app.loop.run_until_complete(future)
     return wrapper

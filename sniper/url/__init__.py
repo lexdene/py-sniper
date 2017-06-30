@@ -1,4 +1,4 @@
-from .url import url, resource, include, verb, method_actions
+from .resolvers import url, resource, include, verb, method_actions
 from .actions import collection, detail
 
 

@@ -48,14 +48,14 @@ class Controller(BaseController):
 
         if not isinstance(result, Response):
             result = self.process_return_data(result)
-            result = self.create_response(result)
+            result = await self.create_response(result)
 
         return result
 
     def process_return_data(self, ret):
         return ret
 
-    def create_response(self, ret):
+    async def create_response(self, ret):
         return self.response_class(ret)
 
     @classmethod
@@ -84,7 +84,7 @@ class NotFoundController(Controller):
 
 
 class JsonResponseMixin:
-    def create_response(self, ret):
+    async def create_response(self, ret):
         return Response(
             json.dumps(ret),
             headers=[

@@ -1,6 +1,7 @@
 import unittest
 from asyncio import iscoroutinefunction
 from functools import wraps
+from http.cookies import SimpleCookie
 from urllib.parse import urlencode
 
 from .app import BaseApp
@@ -11,6 +12,12 @@ class TestClient:
     def __init__(self, app):
         self.app = app
         self.cookies = None
+
+    def set_cookie(self, key, value):
+        if self.cookies is None:
+            self.cookies = SimpleCookie()
+
+        self.cookies[key] = value
 
     async def request(self, method, path,
                       query=None, body=None, headers=None,

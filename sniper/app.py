@@ -11,14 +11,10 @@ logger = logging.getLogger('sniper.application')
 
 class BaseApp:
     def __init__(self, urls=[], config=None,
-                 session_cls=None, session_store=None,
                  parser_class=None,
                  startups=[]):
         self.urls = urls
-        self.config = config
-
-        self.session_cls = session_cls
-        self.session_store = session_store
+        self.config = config or {}
 
         self.parser_class = parser_class or HttpParser
         self._parser = None

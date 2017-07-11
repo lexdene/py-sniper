@@ -1,3 +1,4 @@
+import datetime
 import random
 import string
 import urllib.parse
@@ -116,3 +117,9 @@ _DEFAULT_ALLOWED_CHARS = string.ascii_lowercase + string.digits
 
 def random_string(allowed_chars=_DEFAULT_ALLOWED_CHARS, length=32):
     return ''.join(random.choice(allowed_chars) for _ in range(length))
+
+
+def get_now():
+    return datetime.datetime.now(
+        datetime.timezone.utc
+    )

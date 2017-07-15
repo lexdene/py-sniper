@@ -26,6 +26,8 @@ class Controller(BaseController):
     ]
     _middleware_entry = None   # lazy build
 
+    response_class = Response
+
     async def run(self):
         handler = self._get_middleware_entry()
         return await handler(self)

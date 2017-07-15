@@ -11,6 +11,11 @@ class BadRequest(HttpError):
     detail = 'bad request'
 
 
+class NotFound(HttpError):
+    status_code = 404
+    detail = 'not found'
+
+
 class MethodNotAllowed(HttpError):
     status_code = 405
     detail = 'method not allowed'

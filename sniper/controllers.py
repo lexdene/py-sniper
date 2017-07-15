@@ -2,7 +2,7 @@ import asyncio
 import json
 
 from . import middlewares
-from .exceptions import MethodNotAllowed
+from .exceptions import MethodNotAllowed, NotFound
 from .responses import Response
 from .sessions import session_middleware
 
@@ -105,3 +105,23 @@ class MethodActionsMixin:
 
     def post(self):
         return self.handle()
+
+
+class ModelController(JsonResponseMixin, Controller):
+    def get_model(self):
+        return self.model_class(self.app)
+
+    def get_pk(self):
+        return int(self.kwargs['pk'])
+
+    def retrieve(self):
+        model = self.get_model()
+
+        pk = self.get_pk()
+        obj = model.get_object(pk)
+
+        if obj is None:
+            raise NotFound()
+
+        if obj:
+            return obj

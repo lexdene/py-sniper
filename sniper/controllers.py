@@ -5,6 +5,7 @@ from . import middlewares
 from .exceptions import MethodNotAllowed, NotFound
 from .responses import Response
 from .sessions import session_middleware
+from .utils import cached_property
 
 
 class BaseController:
@@ -27,6 +28,7 @@ class Controller(BaseController):
     _middleware_entry = None   # lazy build
 
     response_class = Response
+    authentication_classes = ()
 
     async def run(self):
         handler = self._get_middleware_entry()
@@ -53,6 +55,17 @@ class Controller(BaseController):
             result = await self.create_response(result)
 
         return result
+
+    @cached_property
+    def user(self):
+        for authenticator in self.get_authenticators():
+            user = authenticator.authenticate(self.request)
+            if user is not None:
+                return user
+
+    def get_authenticators(self):
+        for cls in self.authentication_classes:
+            yield cls(self)
 
     def process_return_data(self, ret):
         return ret

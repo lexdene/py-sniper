@@ -15,10 +15,24 @@ class BadRequestCtrl(Controller):
         raise BadRequest()
 
 
+class CoverBadRequestCtrl(Controller):
+    def handle(self):
+        raise BadRequest()
+
+    def handle_http_error(self, e):
+        if isinstance(e, BadRequest):
+            return Response(
+                'cover bad request'
+            )
+
+        return super().handle_http_error(e)
+
+
 app = TestApp(
     urls=[
         url(r'^/hello$', HelloCtrl),
         url(r'^/bad-request$', BadRequestCtrl),
+        url(r'^/cover-bad-request$', CoverBadRequestCtrl),
     ]
 )
 
@@ -44,4 +58,19 @@ class TestMiddleware(TestCase):
         self.assertEqual(
             r.status_code,
             400
+        )
+        self.assertEqual(
+            r.body,
+            'bad request'
+        )
+
+    async def test_cover_bad_request(self):
+        r = await self.client.get('/cover-bad-request')
+        self.assertEqual(
+            r.status_code,
+            200
+        )
+        self.assertEqual(
+            r.body,
+            'cover bad request'
         )

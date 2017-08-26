@@ -71,6 +71,12 @@ class Controller(BaseController):
     def before_handle(self):
         pass
 
+    def handle_http_error(self, e):
+        return Response(
+            body=e.detail,
+            status_code=e.status_code
+        )
+
     def process_return_data(self, ret):
         return ret
 

@@ -6,10 +6,7 @@ async def catch_http_errors(controller, get_response):
     try:
         return await get_response(controller)
     except HttpError as e:
-        return Response(
-            body=e.detail,
-            status_code=e.status_code
-        )
+        return controller.handle_http_error(e)
 
 
 def build_entry(middleware_list):

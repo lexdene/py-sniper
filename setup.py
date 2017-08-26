@@ -5,7 +5,7 @@ with open('README.rst') as f:
 
 setup(
     name="sniper",
-    version="0.0.5",
+    version="0.0.6",
     description="an asynchronous restful web framework base on asyncio",
     long_description=LONG_DESCRIPTION,
     url="https://github.com/lexdene/py-sniper",

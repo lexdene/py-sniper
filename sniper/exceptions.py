@@ -11,6 +11,11 @@ class BadRequest(HttpError):
     detail = 'bad request'
 
 
+class NotAuthenticated(HttpError):
+    status_code = 401
+    detail = 'not authenticated'
+
+
 class NotFound(HttpError):
     status_code = 404
     detail = 'not found'

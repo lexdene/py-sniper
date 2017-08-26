@@ -45,6 +45,7 @@ class Controller(BaseController):
         else:
             handler = self.handle
 
+        self.before_handle()
         result = handler()
 
         if asyncio.iscoroutine(result):
@@ -66,6 +67,9 @@ class Controller(BaseController):
     def get_authenticators(self):
         for cls in self.authentication_classes:
             yield cls(self)
+
+    def before_handle(self):
+        pass
 
     def process_return_data(self, ret):
         return ret

@@ -99,14 +99,14 @@ class QueryList:
     @classmethod
     def parse_str(cls, s):
         if s:
-            l = urllib.parse.parse_qsl(
+            values = urllib.parse.parse_qsl(
                 s,
                 keep_blank_values=True,
                 strict_parsing=True
             )
         else:
-            l = []
-        return cls(l)
+            values = []
+        return cls(values)
 
     def __contains__(self, name):
         for key, _ in self._data:

@@ -5,6 +5,7 @@ import time
 from .controllers import BaseController, NotFoundController
 from .parsers import HttpParser, ParseError
 from .responses import Response
+from .utils import create_critical_task
 
 logger = logging.getLogger('sniper.application')
 
@@ -95,8 +96,9 @@ class BaseApp:
 
 class Application(BaseApp):
     def run(self, *argv, **kwargs):
-        startup_task = self.loop.create_task(self.startup(*argv, **kwargs))
-        startup_task.add_done_callback(self.on_startup_done)
+        create_critical_task(
+            self.loop, self.startup(*argv, **kwargs)
+        )
 
         try:
             self.loop.run_forever()
@@ -123,15 +125,6 @@ class Application(BaseApp):
 
         for startup in self.startups:
             await startup(self.loop, self)
-
-    def on_startup_done(self, fut):
-        'exit if error when startup'
-        assert fut.done(), 'startup is not done'
-
-        err = fut.exception()
-        if err:
-            self.loop.stop()
-            raise err
 
     async def _client_connected(self, reader, writer):
         connection_id = self.next_connection_id

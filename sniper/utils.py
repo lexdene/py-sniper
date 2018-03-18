@@ -127,3 +127,18 @@ def get_now():
     return datetime.datetime.now(
         datetime.timezone.utc
     )
+
+
+def create_critical_task(loop, coro):
+    def on_task_done(fut):
+        assert fut.done(), 'task is not done'
+
+        err = fut.exception()
+        if err:
+            loop.stop()
+            raise err
+
+    task = loop.create_task(coro)
+    task.add_done_callback(on_task_done)
+
+    return task
